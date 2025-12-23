@@ -155,6 +155,27 @@
         .text-overlay {
             transition: opacity 1.5s ease-in-out;
         }
+
+        /* 录制指示器 */
+        #rec-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #ff0000;
+            font-weight: bold;
+            font-family: monospace;
+            z-index: 2000;
+            font-size: 16px;
+            display: none;
+            animation: blink 1s infinite;
+            pointer-events: none;
+        }
+
+        @keyframes blink {
+            50% {
+                opacity: 0;
+            }
+        }
     </style>
 </head>
 
@@ -168,6 +189,9 @@
     <div id="intro-overlay">
         <div class="breath-ring"></div>
     </div>
+
+    <!-- 录制指示器 -->
+    <div id="rec-indicator">● REC</div>
 
     <!-- 调试面板 (按` 键切换) -->
     <div id="debug-info" style="
@@ -274,8 +298,8 @@
         <hr style="border-color:#333; margin:10px 0;">
         <b>🎥 录制动画</b><br>
         <span style="color:#888; font-size:11px;">
-            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">R</kbd> 开始录制<br>
-            拖动摄像头，松开鼠标结束
+            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">R</kbd> 切换录制<br>
+            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">P</kbd> 回放录制
         </span>
         <div id="record-status" style="color:#f00; margin-top:5px;"></div>
 
@@ -669,15 +693,18 @@
 
             // 显示准备状态
             const debugEl = document.getElementById('debug-info');
-            debugEl.style.display = 'block';
-            debugEl.style.border = '2px solid #ff0';
-            document.getElementById('record-status').innerHTML = '⏳ 准备录制... 按住鼠标拖动';
+            // debugEl.style.display = 'block'; // 不需要强制打开面板
+            if (debugEl.style.display !== 'none') {
+                debugEl.style.border = '2px solid #ff0';
+                document.getElementById('record-status').innerHTML = '⏳ 准备录制...';
+            }
 
-            console.log('⏳ 准备录制... 按住鼠标拖动');
+            console.log('⏳ 准备录制...');
+            startRecording(); // 现在改为直接开始，或者是按下R键切换开关模式
         }
 
         function startRecording() {
-            if (!recordReady || isRecording) return;
+            if (isRecording) return;
             recordReady = false;
             isRecording = true;
             recordStartTime = performance.now();
@@ -694,8 +721,15 @@
             });
 
             // 显示录制状态
-            document.getElementById('debug-info').style.border = '2px solid #f00';
-            document.getElementById('record-status').innerHTML = '🔴 录制中... 松开鼠标结束';
+            const debugEl = document.getElementById('debug-info');
+            if (debugEl.style.display !== 'none') {
+                debugEl.style.border = '2px solid #f00';
+                document.getElementById('record-status').innerHTML = '🔴 录制中... (按R停止)';
+            }
+
+            // 显示 REC 指示器
+            document.getElementById('rec-indicator').style.display = 'block';
+
             console.log('🔴 开始录制...');
         }
 
@@ -707,8 +741,12 @@
             const duration = ((performance.now() - recordStartTime) / 1000).toFixed(1);
 
             // 恢复调试面板样式
-            document.getElementById('debug-info').style.border = 'none';
+            const debugEl = document.getElementById('debug-info');
+            debugEl.style.border = 'none';
             document.getElementById('record-status').innerHTML = `✅ 录制完成 (${duration}秒, ${recordedFrames.length}帧)`;
+
+            // 隐藏 REC 指示器
+            document.getElementById('rec-indicator').style.display = 'none';
 
             console.log(`⏹ 录制结束，时长: ${duration}秒, 帧数: ${recordedFrames.length}`);
         }
@@ -726,35 +764,35 @@
             });
         }
 
-        // 按 R 键准备录制
+        // 按 R 键切换录制，按 P 键回放
         window.addEventListener('keydown', (e) => {
+            // R 键: 切换录制
             if (e.key === 'r' || e.key === 'R') {
-                if (!cameraAnimating && controls.enabled) {
-                    prepareRecording();
+                if (!isRecording) {
+                    if (!cameraAnimating && controls.enabled) {
+                        startRecording();
+                    }
+                } else {
+                    stopRecording();
+                }
+            }
+
+            // P 键: 回放 (仅当未录制且未动画时)
+            if (e.key === 'p' || e.key === 'P') {
+                if (!isRecording && !cameraAnimating && recordedFrames.length > 0) {
+                    replayAnimation();
                 }
             }
         });
 
-        // 【录制】使用 pointerdown（比 mousedown 更早触发，不会被 OrbitControls 阻止）
-        document.addEventListener('pointerdown', (e) => {
-            console.log('[pointerdown] target:', e.target.tagName, e.target.id || e.target.className);
-            console.log('[pointerdown] recordReady:', recordReady, 'isRecording:', isRecording);
-
-            // 如果准备录制状态，且不是点击调试面板，就开始录制
-            const debugPanel = document.getElementById('debug-info');
-            if (recordReady && !debugPanel.contains(e.target)) {
-                console.log('[pointerdown] >>> 开始录制!');
-                startRecording();
-            }
-        }, true);
-
+        // 移除旧的 pointer 事件监听，改为完全由键盘控制录制开关
+        // 这更符合用户"不需要打开面板"的需求
+        /*
+        // 【录制】使用 pointerdown
+        document.addEventListener('pointerdown', (e) => { ... }, true);
         // 【录制】使用 pointerup 结束录制
-        document.addEventListener('pointerup', () => {
-            console.log('[pointerup] isRecording:', isRecording);
-            if (isRecording) {
-                stopRecording();
-            }
-        }, true);
+        document.addEventListener('pointerup', () => { ... }, true);
+        */
 
         // ============ 文字配置功能 ============
         // ============ 文字配置功能 ============
