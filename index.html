@@ -212,181 +212,402 @@
     <div id="rec-indicator">● REC</div>
 
     <!-- 调试面板 (按` 键切换) -->
-    <div id="debug-info" style="
-        display: none;
-        position: fixed;
-        top: 20px;
-        right: 20px;
-        background: rgba(0,0,0,0.85);
-        color: #0f0;
-        padding: 15px;
-        font-family: monospace;
-        font-size: 13px;
-        border-radius: 8px;
-        z-index: 1000;
-        max-height: 90vh;
-        overflow-y: auto;
-        width: 280px;
-    ">
+    <div id="debug-info">
         <div id="camera-info"></div>
-        <hr style="border-color:#333; margin:10px 0;">
 
-        <b>💾 配置管理</b><br>
-        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
-            <button onclick="configManager.save()"
-                style="flex:1; padding:6px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-                保存(Local)
-            </button>
-            <button onclick="configManager.reset()"
-                style="flex:1; padding:6px; background:#a33; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-                重置
-            </button>
-        </div>
-        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
-            <button onclick="configManager.export()"
-                style="flex:1; padding:6px; background:#333; color:#0f0; border:1px solid #444; border-radius:4px; cursor:pointer;">
-                导出JSON
-            </button>
-            <label
-                style="flex:1; padding:6px; background:#333; color:#0f0; border:1px solid #444; border-radius:4px; cursor:pointer; text-align:center; display:inline-block;">
-                导入JSON
-                <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
-            </label>
-        </div>
-        <hr style="border-color:#333; margin:10px 0;">
-
-        <b>🎬 动画参数</b><br><br>
-
-        <label>起点 X: <input type="number" id="anim-start-x" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label>
-        <button onclick="setStartToCurrent()" style="margin-left:5px; font-size:11px;">当前</button><br>
-        <label>起点 Y: <input type="number" id="anim-start-y" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
-        <label>起点 Z: <input type="number" id="anim-start-z" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
-
-        <label>终点 X: <input type="number" id="anim-end-x" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label>
-        <button onclick="setEndToCurrent()" style="margin-left:5px; font-size:11px;">当前</button><br>
-        <label>终点 Y: <input type="number" id="anim-end-y" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
-        <label>终点 Z: <input type="number" id="anim-end-z" step="0.1"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
-
-        <hr style="border-color:#333; margin:10px 0;">
-        <b>🎯 目标点 (旋转中心)</b><br><br>
-
-        <label>起始目标 X: <input type="number" id="anim-target-start-x" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
-        <label>起始目标 Y: <input type="number" id="anim-target-start-y" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
-        <label>起始目标 Z: <input type="number" id="anim-target-start-z" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br><br>
-
-        <label>结束目标 X: <input type="number" id="anim-target-end-x" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
-        <label>结束目标 Y: <input type="number" id="anim-target-end-y" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
-        <label>结束目标 Z: <input type="number" id="anim-target-end-z" step="0.1"
-                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
-
-        <hr style="border-color:#333; margin:10px 0;">
-
-        <label>时长(秒): <input type="number" id="anim-duration" step="0.1" min="0.5" max="10"
-                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
-
-        <label>缓动函数:
-            <select id="anim-easing" style="background:#222; color:#0f0; border:1px solid #444;">
-                <option value="linear">linear (线性)</option>
-                <option value="easeOut" selected>easeOutCubic (缓出)</option>
-                <option value="easeIn">easeInCubic (缓入)</option>
-                <option value="easeInOut">easeInOutCubic (缓入缓出)</option>
-            </select>
-        </label><br><br>
-
-        <button onclick="replayAnimation()"
-            style="padding:8px 16px; background:#0a0; color:#000; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
-            ▶ 重播动画
-        </button>
-        <button onclick="printParams()"
-            style="padding:8px 12px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
-            📋 输出
-        </button>
-
-        <hr style="border-color:#333; margin:10px 0;">
-        <b>🎥 录制动画</b><br>
-        <span style="color:#888; font-size:11px;">
-            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">R</kbd> 切换录制<br>
-            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">P</kbd> 回放录制
-        </span>
-        <div id="record-status" style="color:#f00; margin-top:5px;"></div>
-
-        <hr style="border-color:#333; margin:10px 0;">
-        <b>📝 文字配置</b><br><br>
-
-        <label>位置 Left: <input type="text" id="text-left"
-                style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
-        <label>位置 Top: <input type="text" id="text-top"
-                style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
-
-        <div id="text-lines-config">
-            <div class="text-line-config" data-line="0">
-                <b style="color:#ff0;">行1:</b><br>
-                <input type="text" id="text-content-0"
-                    style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
-                <label style="font-size:11px;">字号: <input type="text" id="text-size-0"
-                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">颜色: <input type="text" id="text-color-0"
-                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-0"></label>
-                <label style="font-size:11px; margin-left:10px;">字体:
-                    <select id="text-font-0"
-                        style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
-                        <option value="serif" selected>衬线体</option>
-                        <option value="sans-serif">无衬线</option>
-                        <option value="KaiTi">楷体</option>
-                    </select>
+        <div class="panel-section">
+            <div class="section-title">💾 配置管理</div>
+            <div class="btn-group">
+                <button onclick="configManager.reset()" class="btn btn-danger">重置</button>
+            </div>
+            <div class="btn-group">
+                <button onclick="configManager.export()" class="btn btn-secondary">导出JSON</button>
+                <label class="btn btn-secondary">
+                    导入JSON
+                    <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
                 </label>
             </div>
-            <br>
-            <label style="font-size:11px; margin-left:10px;">字体:
-                <select id="text-font-0" style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
-                    <option value="serif">衬线体</option>
-                    <option value="sans-serif">无衬线</option>
-                    <option value="KaiTi">楷体</option>
-                </select>
-            </label>
         </div>
-        <br>
-        <div class="text-line-config" data-line="1">
-            <b style="color:#ff0;">行2:</b><br>
-            <input type="text" id="text-content-1"
-                style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
-            <label style="font-size:11px;">字号: <input type="text" id="text-size-1"
-                    style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-            <label style="font-size:11px;">颜色: <input type="text" id="text-color-1"
-                    style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-            <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-1"></label>
-            <label style="font-size:11px; margin-left:10px;">字体:
-                <select id="text-font-1" style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
-                    <option value="serif">衬线体</option>
-                    <option value="sans-serif">无衬线</option>
-                    <option value="KaiTi">楷体</option>
+
+        <div class="panel-section">
+            <div class="section-title">🎬 动画参数</div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画起点</span>
+                <button onclick="setStartToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画终点</span>
+                <button onclick="setEndToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎯 目标点 (旋转中心)</div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标起点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标终点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="control-group">
+                <label>时长(秒):</label>
+                <input type="number" id="anim-duration" step="0.1" min="0.5" max="10">
+            </div>
+            <div class="control-group">
+                <label>缓动:</label>
+                <select id="anim-easing">
+                    <option value="linear">Linear</option>
+                    <option value="easeOut" selected>Ease Out</option>
+                    <option value="easeIn">Ease In</option>
+                    <option value="easeInOut">Ease In Out</option>
                 </select>
-            </label>
+            </div>
+
+            <div class="btn-group" style="margin-top:10px;">
+                <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
+                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎥 录制动画</div>
+            <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
+            <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
+        </div>
+        <div class="panel-section">
+            <div class="section-title">📝 文字配置</div>
+
+            <div class="control-group">
+                <label>Left:</label>
+                <input type="text" id="text-left">
+            </div>
+            <div class="control-group">
+                <label>Top:</label>
+                <input type="text" id="text-top">
+            </div>
+
+            <div id="text-lines-config">
+                <div class="text-line-card" data-line="0">
+                    <div class="card-header">行 1</div>
+                    <input type="text" id="text-content-0" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-0" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-0" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-0" title="斜体">
+                    </div>
+                    <select id="text-font-0" class="full-width">
+                        <option value="serif" selected>衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+
+                <div class="text-line-card" data-line="1">
+                    <div class="card-header">行 2</div>
+                    <input type="text" id="text-content-1" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-1" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-1" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-1" title="斜体">
+                    </div>
+                    <select id="text-font-1" class="full-width">
+                        <option value="serif">衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:15px;">
+                <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
+                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
+            </div>
         </div>
     </div>
-    </div>
-    <br>
-    <button onclick="applyTextConfig()"
-        style="padding:6px 12px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-        ✏️ 应用文字
-    </button>
-    <button onclick="printTextConfig()"
-        style="padding:6px 10px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
-        📋
-    </button>
-    </div>
+
+    <!-- 样式补充 -->
+    <style>
+        #debug-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(18, 18, 24, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            /* JS控制 */
+        }
+
+        /* 滚动条美化 */
+        #debug-info::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #debug-info::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        #debug-info::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .panel-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-left: 3px solid #06a;
+            padding-left: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            justify-content: space-between;
+        }
+
+        .control-group label {
+            color: #aaa;
+            flex: 0 0 60px;
+        }
+
+        .control-group input[type="number"],
+        .control-group input[type="text"],
+        .control-group select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: #0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            flex: 1;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            border-color: #06a;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .control-group.half {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .control-group.half label {
+            flex: 0 0 35px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+            color: #fff;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0a0, #080);
+            color: #fff;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, #06a, #048);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #a33, #822);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+        }
+
+        .btn-sm {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            font-size: 11px;
+            margin-left: 5px;
+            background: #444;
+            color: #ccc;
+        }
+
+        .divider {
+            height: 1px;
+            background: #333;
+            margin: 10px 0;
+        }
+
+        .text-line-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .card-header {
+            font-size: 11px;
+            color: #fc0;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .full-width {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        kbd {
+            background: #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border-bottom: 2px solid #222;
+        }
+
+        .hint-text {
+            color: #888;
+            font-size: 12px;
+        }
+
+        /* Optimize Layout */
+        #debug-info {
+            box-sizing: border-box;
+            width: 300px !important;
+            /* Force width */
+        }
+
+        .control-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-right: 2px;
+        }
+
+        .label-title {
+            color: #ccc;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Make inputs in Animation section tighter */
+        .panel-section .control-group label {
+            flex: 0 0 50px;
+            /* Slightly reduce label width */
+        }
+    </style>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
@@ -394,6 +615,14 @@
     <script>
         const container = document.getElementById('container');
         const scene = new THREE.Scene();
+
+        // ============ 录制功能变量 (需提前声明) ============
+        let recordReady = false;   // 准备录制
+        let isRecording = false;   // 正在录制
+        let recordStartTime = 0;
+        let recordedFrames = [];   // 逐帧录制的数据
+        let isPlayingRecording = false;  // 正在回放录制
+        let playbackFrame = 0;     // 当前回放帧
 
         // ============ 配置管理系统 ============
         const DEFAULT_CONFIG = {
@@ -403,7 +632,8 @@
                 targetStartX: 0, targetStartY: 6, targetStartZ: 0,
                 targetEndX: 0, targetEndY: 2, targetEndZ: 0,
                 duration: 2.5,
-                easing: 'easeOut'
+                easing: 'easeOut',
+                recordedFrames: []
             },
             text: {
                 left: '8%',
@@ -439,38 +669,36 @@
                         const parsed = JSON.parse(saved);
                         // 简单合并（实际项目中可能需要深度合并）
                         appConfig = { ...DEFAULT_CONFIG, ...parsed };
+
                         // 深度合并 animation 和 text，防止部分丢失
-                        if (parsed.animation) appConfig.animation = { ...DEFAULT_CONFIG.animation, ...parsed.animation };
-                        if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text }; // 注意：lines 数组会直接覆盖
+                        if (parsed.animation) {
+                            appConfig.animation = { ...DEFAULT_CONFIG.animation, ...parsed.animation };
+                            // 恢复录像数据
+                            if (parsed.animation.recordedFrames && Array.isArray(parsed.animation.recordedFrames)) {
+                                recordedFrames = parsed.animation.recordedFrames;
+                                console.log(`✅ 恢复了 ${recordedFrames.length} 帧录像数据`);
+                            }
+                        }
+                        if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text };
+
                         console.log('✅ 配置已从 LocalStorage 加载');
                     } else {
                         console.log('ℹ️ 未找到本地配置，使用默认值');
                     }
                 } catch (e) {
-                    console.error('配置加载失败，重置为默认', e);
-                    this.reset();
-                }
-            },
-
-            // 保存配置到 LocalStorage
-            save: function () {
-                try {
-                    // 保存前先更新内存中的最新值
-                    readParamsFromPanel();
-                    // 这里不需要再次 applyTextConfig，因为输入框的值就是最新的
-                    // 但我们需要把输入框的值回写到 appConfig 才能保存
-                    updateAppConfigFromInputs();
-
-                    localStorage.setItem('galaxy_tree_config', JSON.stringify(appConfig));
-                    alert('✅ 配置已保存到本地！刷新后依然生效。');
-                } catch (e) {
-                    alert('❌ 保存失败: ' + e.message);
+                    console.error('配置加载失败，已自动恢复默认', e);
+                    // 静默恢复默认值，不弹窗
+                    appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                    recordedFrames = [];
                 }
             },
 
             // 导出 JSON
             export: function () {
                 updateAppConfigFromInputs(); // 确保导出的是当前面板上的值
+                // 确保录像数据也在其中
+                appConfig.animation.recordedFrames = recordedFrames;
+
                 const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appConfig, null, 2));
                 const downloadAnchorNode = document.createElement('a');
                 downloadAnchorNode.setAttribute("href", dataStr);
@@ -494,14 +722,19 @@
                             throw new Error('JSON 格式不正确');
                         }
                         appConfig = parsed;
+
+                        // 恢复内存中的录像数据
+                        if (appConfig.animation.recordedFrames) {
+                            recordedFrames = appConfig.animation.recordedFrames;
+                        } else {
+                            recordedFrames = [];
+                        }
+
                         localStorage.setItem('galaxy_tree_config', JSON.stringify(appConfig));
 
                         // 刷新 UI
                         initDebugPanel();
                         applyTextConfig();
-
-                        // 如果需要，也可以重置摄像头位置
-                        // camera.position.set(appConfig.animation.startX, appConfig.animation.startY, appConfig.animation.startZ);
 
                         alert('✅ 配置导入成功！');
                     } catch (err) {
@@ -518,14 +751,61 @@
                 if (confirm('确定要重置所有参数并清除本地缓存吗？')) {
                     localStorage.removeItem('galaxy_tree_config');
                     appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                    recordedFrames = []; // 清空录像
                     initDebugPanel();
                     applyTextConfig();
-                    // 可选：刷新页面
-                    // location.reload();
                     alert('配置已重置 (如需看效果建议刷新页面)');
                 }
             }
         };
+
+        // 独立保存动画配置 (包含录像数据)
+        function saveAnimationToLocal() {
+            try {
+                // 1. 读取面板数值到 appConfig
+                readParamsFromPanel();
+                // 2. 将内存中的录像帧同步到配置
+                appConfig.animation.recordedFrames = recordedFrames;
+
+                // 3. 读取现有 localStorage，仅更新 animation 部分
+                const savedStr = localStorage.getItem('galaxy_tree_config');
+                let savedConfig = savedStr ? JSON.parse(savedStr) : {};
+
+                savedConfig.animation = appConfig.animation; // 覆盖动画部分
+
+                localStorage.setItem('galaxy_tree_config', JSON.stringify(savedConfig));
+
+                const msg = recordedFrames.length > 1
+                    ? `✅ 动画参数及 ${recordedFrames.length} 帧录像已写入 Local!`
+                    : `✅ 动画参数已写入 Local (无录像数据)`;
+                alert(msg);
+            } catch (e) {
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
+
+        // 独立保存文字配置
+        function saveTextToLocal() {
+            try {
+                // 1. 读取面板数值到 appConfig
+                updateAppConfigFromInputs();
+
+                // 2. 读取现有 localStorage，仅更新 text 部分
+                const savedStr = localStorage.getItem('galaxy_tree_config');
+                let savedConfig = savedStr ? JSON.parse(savedStr) : {};
+
+                savedConfig.text = appConfig.text; // 覆盖文字部分
+                // 确保 savedConfig 其他部分（如 animation）如果原本没有，需要补全吗？
+                if (!savedConfig.animation) {
+                    savedConfig.animation = appConfig.animation;
+                }
+
+                localStorage.setItem('galaxy_tree_config', JSON.stringify(savedConfig));
+                alert('✅ 文字配置已写入 Local!');
+            } catch (e) {
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
 
         // 初始化加载
         configManager.load();
@@ -694,12 +974,7 @@
         }
 
         // ============ 录制功能 ============
-        let recordReady = false;   // 准备录制
-        let isRecording = false;   // 正在录制
-        let recordStartTime = 0;
-        let recordedFrames = [];   // 逐帧录制的数据
-        let isPlayingRecording = false;  // 正在回放录制
-        let playbackFrame = 0;     // 当前回放帧
+        // 变量定义已移至顶部
 
         function updateRecIndicator(state, text) {
             const el = document.getElementById('rec-indicator');
@@ -1783,7 +2058,27 @@
 
             time += 0.016;
 
-            // 摄像头动画
+            // 每一帧尝试录制
+            recordFrame();
+
+            // 回放录制数据
+            if (isPlayingRecording) {
+                playbackFrame++; // 播放下一帧
+                if (playbackFrame < recordedFrames.length) {
+                    const f = recordedFrames[playbackFrame];
+                    camera.position.set(f.px, f.py, f.pz);
+                    controls.target.set(f.tx, f.ty, f.tz); // 同步更新目标点
+                    controls.update();
+                } else {
+                    // 回放结束
+                    isPlayingRecording = false;
+                    controls.enabled = true;
+                    console.log('📼 录制回放结束');
+                    document.querySelector('.text-overlay').classList.remove('hidden');
+                }
+            }
+
+            // 摄像头动画 (参数插值)
             if (cameraAnimating) {
                 cameraAnimProgress += 0.016 / animParams.duration;
 
