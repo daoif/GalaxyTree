@@ -19,8 +19,8 @@ func main() {
 	var listener net.Listener
 	var err error
 
-	// 试图优先监听 1225-1230 端口
-	preferredPorts := []int{1225, 1226, 1227, 1228, 1229, 1230}
+	// 试图优先监听 12225-12230 端口 (避开 Windows 保留端口 1025-1430)
+	preferredPorts := []int{12225, 12226, 12227, 12228, 12229, 12230}
 	for _, p := range preferredPorts {
 		listener, err = net.Listen("tcp", fmt.Sprintf("127.0.0.1:%d", p))
 		if err == nil {
@@ -31,7 +31,7 @@ func main() {
 
 	// 如果所有优先端口都失败，回退到随机端口
 	if listener == nil {
-		fmt.Printf("⚠️ 所有优先端口 (1225-1230) 均不可用，尝试自动分配...\n")
+		fmt.Printf("⚠️ 所有优先端口 (12225-12230) 均不可用，尝试自动分配...\n")
 		listener, err = net.Listen("tcp", "127.0.0.1:0")
 		if err != nil {
 			panic(fmt.Sprintf("无法启动服务器: %v", err))
