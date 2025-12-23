@@ -1,32 +1,32 @@
-# ✨ Galaxy Christmas Tree
+# ✨ 星河圣诞树 (Galaxy Christmas Tree)
 
-A beautiful, configurable 3D Christmas Tree simulation built with WebGL (Three.js) and wrapped in a lightweight Go executable.
+这是一个基于 WebGL (Three.js) 制作的唯美 3D 圣诞树模拟程序，已封装为轻量级 Windows 可执行文件 (.exe)，无需安装即可运行。
 
-![Preview](png/g1.png)
+![预览图](png/g1.png)
 
-## Features
+## ✨ 主要功能
 
-- **3D Galaxy Tree**: Thousands of particles forming a magical tree.
-- **Configurable Ornaments**: Switch between classic Gold Coins and Ruby Hearts.
-- **Customizable Text**: Update the greeting message and "I Love You" text directly from the UI.
-- **Animation Recording**: Record your camera movements and replay them perfect for making videos.
-- **Portable**: Single `.exe` file, no installation required.
+- **3D 星河粒子树**: 由数万个粒子组成的梦幻圣诞树，伴有呼吸灯效。
+- **可配置装饰**: 支持一键切换“经典金币”或“红宝石桃心”装饰。
+- **自定义祝福语**: 可在控制面板中实时修改显示的祝福文字（如“Merry Christmas”、“我爱你”等）。
+- **动画录制与回放**: 支持录制摄像机运镜并保存回放，非常适合制作演示视频。
+- **绿色免安装**: 只有一个 `.exe` 文件，双击即用，方便分享。
 
-## How to Use
+## 🚀 使用说明
 
-1. **Download**: Get the latest `GalaxyTree.exe` from the Releases page.
-2. **Run**: Double-click the executable.
-3. **Controls**:
-    - **Rotate**: Left-click and drag.
-    - **Zoom**: Scroll wheel.
-    - **Config Panel**: Press ` ` ` (backtick key, above Tab) to toggle the configuration panel.
-    - **Record/Replay**: Use the panel or hotkeys `R` (Record) and `P` (Play).
+1. **下载**: 获取最新的 `GalaxyTree.exe` 文件。
+2. **运行**: 双击文件即可启动。
+3. **操作指南**:
+    - **旋转视角**: 鼠标左键按住拖拽。
+    - **缩放视角**: 鼠标滚轮滚动。
+    - **设置面板**: 按键盘左上角的 `~` 键 (Esc下方) 可显示/隐藏配置面板。
+    - **录制/回放**: 使用面板上的按钮，或快捷键 `R` (录制) / `P` (回放)。
 
-## Author Info
+## ℹ️ 关于作者
 
-- **QQ Exchange Group**: 993975349
-- **GitHub**: [GalaxyTree Repository](https://github.com/YourUsername/GalaxyTree)
+- **技术交流群**: 993975349
+- **项目主页**: [GitHub Repository](https://github.com/YourUsername/GalaxyTree)
 
-## License
+## 📄 开源协议
 
-MIT
+MIT License
