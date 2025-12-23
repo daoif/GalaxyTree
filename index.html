@@ -157,24 +157,42 @@
         }
 
         /* 录制指示器 */
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .rec-ready {
+            color: #ffff00;
+            border: 1px solid #ffff00;
+        }
+
+        .rec-recording {
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            animation: blink 1s infinite;
+        }
+
+        .rec-saved {
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        /* 录制指示器默认样式更新 */
         #rec-indicator {
             position: fixed;
             top: 20px;
             left: 20px;
-            color: #ff0000;
             font-weight: bold;
             font-family: monospace;
             z-index: 2000;
             font-size: 16px;
             display: none;
-            animation: blink 1s infinite;
             pointer-events: none;
-        }
-
-        @keyframes blink {
-            50% {
-                opacity: 0;
-            }
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.5);
         }
     </style>
 </head>
@@ -683,29 +701,35 @@
         let isPlayingRecording = false;  // 正在回放录制
         let playbackFrame = 0;     // 当前回放帧
 
+        function updateRecIndicator(state, text) {
+            const el = document.getElementById('rec-indicator');
+            el.className = ''; // reset classes
+            el.style.display = 'block';
+            el.textContent = text;
+
+            if (state === 'ready') el.classList.add('rec-ready');
+            else if (state === 'recording') el.classList.add('rec-recording');
+            else if (state === 'saved') el.classList.add('rec-saved');
+            else el.style.display = 'none';
+        }
+
         function prepareRecording() {
-            if (recordReady || isRecording) {
-                console.log('[R] 已在录制状态，忽略');
-                return;
-            }
-            recordReady = true;
-            console.log('[R] recordReady 设为 true');
+            if (isRecording) return;
+            // 切换 Ready 状态
+            recordReady = !recordReady;
 
-            // 显示准备状态
-            const debugEl = document.getElementById('debug-info');
-            // debugEl.style.display = 'block'; // 不需要强制打开面板
-            if (debugEl.style.display !== 'none') {
-                debugEl.style.border = '2px solid #ff0';
-                document.getElementById('record-status').innerHTML = '⏳ 准备录制...';
+            if (recordReady) {
+                console.log('[R] 进入准备状态');
+                updateRecIndicator('ready', '● READY (Hold Click)');
+            } else {
+                console.log('[R] 取消准备');
+                updateRecIndicator('hide', '');
             }
-
-            console.log('⏳ 准备录制...');
-            startRecording(); // 现在改为直接开始，或者是按下R键切换开关模式
         }
 
         function startRecording() {
-            if (isRecording) return;
-            recordReady = false;
+            if (!recordReady || isRecording) return;
+            // recordReady = false;
             isRecording = true;
             recordStartTime = performance.now();
             recordedFrames = [];  // 清空帧数组
@@ -736,6 +760,7 @@
         function stopRecording() {
             if (!isRecording) return;
             isRecording = false;
+            recordReady = false; // 录制结束，退出准备状态
 
             // 计算时长和帧数
             const duration = ((performance.now() - recordStartTime) / 1000).toFixed(1);
@@ -766,14 +791,10 @@
 
         // 按 R 键切换录制，按 P 键回放
         window.addEventListener('keydown', (e) => {
-            // R 键: 切换录制
+            // R 键: 切换准备录制状态
             if (e.key === 'r' || e.key === 'R') {
-                if (!isRecording) {
-                    if (!cameraAnimating && controls.enabled) {
-                        startRecording();
-                    }
-                } else {
-                    stopRecording();
+                if (!cameraAnimating && controls.enabled && !isRecording) {
+                    prepareRecording();
                 }
             }
 
@@ -785,14 +806,21 @@
             }
         });
 
-        // 移除旧的 pointer 事件监听，改为完全由键盘控制录制开关
-        // 这更符合用户"不需要打开面板"的需求
-        /*
-        // 【录制】使用 pointerdown
-        document.addEventListener('pointerdown', (e) => { ... }, true);
+        // 【录制】使用 pointerdown 开始 (需要 R 键先激活 Ready)
+        document.addEventListener('pointerdown', (e) => {
+            // 如果准备录制状态，且不是点击调试面板
+            const debugPanel = document.getElementById('debug-info');
+            if (recordReady && !isRecording && !debugPanel.contains(e.target)) {
+                startRecording();
+            }
+        }, true);
+
         // 【录制】使用 pointerup 结束录制
-        document.addEventListener('pointerup', () => { ... }, true);
-        */
+        document.addEventListener('pointerup', () => {
+            if (isRecording) {
+                stopRecording();
+            }
+        }, true);
 
         // ============ 文字配置功能 ============
         // ============ 文字配置功能 ============
