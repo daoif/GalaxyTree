@@ -1,0 +1,1689 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Galaxy Christmas Tree ✨</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Times New Roman', Georgia, serif;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .text-overlay {
+            position: fixed;
+            left: 8%;
+            top: 38%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .text-overlay h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-style: italic;
+            font-weight: normal;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow:
+                0 0 30px rgba(255, 255, 255, 0.4),
+                0 0 60px rgba(255, 200, 220, 0.2);
+            margin-bottom: 12px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .text-overlay p {
+            font-size: clamp(20px, 3vw, 32px);
+            font-family: 'KaiTi', '楷体', 'STKaiti', serif;
+            color: rgba(255, 210, 225, 0.85);
+            text-shadow:
+                0 0 20px rgba(255, 150, 180, 0.4),
+                0 0 40px rgba(255, 100, 150, 0.2);
+            animation: float 4s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* 开场覆盖层 */
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* 呼吸光圈 */
+        .breath-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: breathe 2s ease-in-out infinite;
+            position: relative;
+        }
+
+        .breath-ring::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .breath-ring::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            animation: breathe 2s ease-in-out infinite 0.3s;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .breath-ring::before {
+            animation: breathe-inner 2s ease-in-out infinite;
+        }
+
+        @keyframes breathe-inner {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.4;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* 文字初始隐藏 */
+        .text-overlay.hidden {
+            opacity: 0;
+        }
+
+        .text-overlay {
+            transition: opacity 1.5s ease-in-out;
+        }
+    </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div class="text-overlay hidden">
+        <h1>Merry Christmas</h1>
+        <p>我爱你，宝贝</p>
+    </div>
+
+    <!-- 开场覆盖层 -->
+    <div id="intro-overlay">
+        <div class="breath-ring"></div>
+    </div>
+
+    <!-- 调试面板 (按` 键切换) -->
+    <div id="debug-info" style="
+        display: none;
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background: rgba(0,0,0,0.85);
+        color: #0f0;
+        padding: 15px;
+        font-family: monospace;
+        font-size: 13px;
+        border-radius: 8px;
+        z-index: 1000;
+        max-height: 90vh;
+        overflow-y: auto;
+        width: 280px;
+    ">
+        <div id="camera-info"></div>
+        <hr style="border-color:#333; margin:10px 0;">
+
+        <b>🎬 动画参数</b><br><br>
+
+        <label>起点 X: <input type="number" id="anim-start-x" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label>
+        <button onclick="setStartToCurrent()" style="margin-left:5px; font-size:11px;">当前</button><br>
+        <label>起点 Y: <input type="number" id="anim-start-y" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
+        <label>起点 Z: <input type="number" id="anim-start-z" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
+
+        <label>终点 X: <input type="number" id="anim-end-x" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label>
+        <button onclick="setEndToCurrent()" style="margin-left:5px; font-size:11px;">当前</button><br>
+        <label>终点 Y: <input type="number" id="anim-end-y" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
+        <label>终点 Z: <input type="number" id="anim-end-z" step="0.1"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
+
+        <hr style="border-color:#333; margin:10px 0;">
+        <b>🎯 目标点 (旋转中心)</b><br><br>
+
+        <label>起始目标 X: <input type="number" id="anim-target-start-x" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
+        <label>起始目标 Y: <input type="number" id="anim-target-start-y" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
+        <label>起始目标 Z: <input type="number" id="anim-target-start-z" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br><br>
+
+        <label>结束目标 X: <input type="number" id="anim-target-end-x" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
+        <label>结束目标 Y: <input type="number" id="anim-target-end-y" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
+        <label>结束目标 Z: <input type="number" id="anim-target-end-z" step="0.1"
+                style="width:50px; background:#222; color:#ff0; border:1px solid #444;"></label><br>
+
+        <hr style="border-color:#333; margin:10px 0;">
+
+        <label>时长(秒): <input type="number" id="anim-duration" step="0.1" min="0.5" max="10"
+                style="width:60px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
+
+        <label>缓动函数:
+            <select id="anim-easing" style="background:#222; color:#0f0; border:1px solid #444;">
+                <option value="linear">linear (线性)</option>
+                <option value="easeOut" selected>easeOutCubic (缓出)</option>
+                <option value="easeIn">easeInCubic (缓入)</option>
+                <option value="easeInOut">easeInOutCubic (缓入缓出)</option>
+            </select>
+        </label><br><br>
+
+        <button onclick="replayAnimation()"
+            style="padding:8px 16px; background:#0a0; color:#000; border:none; border-radius:4px; cursor:pointer; font-weight:bold;">
+            ▶ 重播动画
+        </button>
+        <button onclick="printParams()"
+            style="padding:8px 12px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
+            📋 输出
+        </button>
+
+        <hr style="border-color:#333; margin:10px 0;">
+        <b>🎥 录制动画</b><br>
+        <span style="color:#888; font-size:11px;">
+            按 <kbd style="background:#444; padding:2px 5px; border-radius:3px;">R</kbd> 开始录制<br>
+            拖动摄像头，松开鼠标结束
+        </span>
+        <div id="record-status" style="color:#f00; margin-top:5px;"></div>
+
+        <hr style="border-color:#333; margin:10px 0;">
+        <b>📝 文字配置</b><br><br>
+
+        <label>位置 Left: <input type="text" id="text-left" value="8%"
+                style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
+        <label>位置 Top: <input type="text" id="text-top" value="38%"
+                style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
+
+        <div id="text-lines-config">
+            <div class="text-line-config" data-line="0">
+                <b style="color:#ff0;">行1:</b><br>
+                <input type="text" id="text-content-0" value="Merry Christmas"
+                    style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
+                <label style="font-size:11px;">字号: <input type="text" id="text-size-0" value="clamp(32px, 5vw, 56px)"
+                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+                <label style="font-size:11px;">颜色: <input type="text" id="text-color-0" value="rgba(255,255,255,0.9)"
+                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-0" checked></label>
+                <label style="font-size:11px; margin-left:10px;">字体:
+                    <select id="text-font-0"
+                        style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
+                        <option value="serif" selected>衬线体</option>
+                        <option value="sans-serif">无衬线</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </label>
+            </div>
+            <br>
+            <div class="text-line-config" data-line="1">
+                <b style="color:#ff0;">行2:</b><br>
+                <input type="text" id="text-content-1" value="我爱你，宝贝"
+                    style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
+                <label style="font-size:11px;">字号: <input type="text" id="text-size-1" value="clamp(20px, 3vw, 32px)"
+                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+                <label style="font-size:11px;">颜色: <input type="text" id="text-color-1" value="rgba(255,210,225,0.85)"
+                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-1"></label>
+                <label style="font-size:11px; margin-left:10px;">字体:
+                    <select id="text-font-1"
+                        style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
+                        <option value="serif">衬线体</option>
+                        <option value="sans-serif">无衬线</option>
+                        <option value="KaiTi" selected>楷体</option>
+                    </select>
+                </label>
+            </div>
+        </div>
+        <br>
+        <button onclick="applyTextConfig()"
+            style="padding:6px 12px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+            ✏️ 应用文字
+        </button>
+        <button onclick="printTextConfig()"
+            style="padding:6px 10px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
+            📋
+        </button>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+    <script>
+        const container = document.getElementById('container');
+        const scene = new THREE.Scene();
+
+        const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
+        // 初始位置: 俯视角度 (第一张截图)
+        camera.position.set(-1.7, 14.4, -2.2);
+
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+        renderer.setClearColor(0x000005, 1);
+        container.appendChild(renderer.domElement);
+
+        const controls = new THREE.OrbitControls(camera, renderer.domElement);
+        controls.enableDamping = true;
+        controls.dampingFactor = 0.05;
+        controls.rotateSpeed = 0.5;
+        controls.enablePan = false;
+        controls.minDistance = 5;
+        controls.maxDistance = 50;
+        controls.target.set(0, 6, 0);  // 初始目标点（俯视时看向树顶）
+        controls.enabled = false;  // 动画完成前禁用
+        controls.update();
+
+        // ============ 摄像头动画状态 ============
+        let cameraAnimating = false;
+        let cameraAnimProgress = 0;
+
+        // 动画参数（可通过调试面板修改）
+        let animParams = {
+            startX: -1.7, startY: 14.4, startZ: -2.2,
+            endX: -6.4, endY: 4.4, endZ: 10.7,
+            // 目标点（旋转中心）
+            targetStartX: 0, targetStartY: 6, targetStartZ: 0,
+            targetEndX: 0, targetEndY: 2, targetEndZ: 0,
+            duration: 2.5,
+            easing: 'easeOut'
+        };
+
+        // 缓动函数集合
+        const easingFunctions = {
+            linear: t => t,
+            easeOut: t => 1 - Math.pow(1 - t, 3),
+            easeIn: t => Math.pow(t, 3),
+            easeInOut: t => t < 0.5 ? 4 * t * t * t : 1 - Math.pow(-2 * t + 2, 3) / 2
+        };
+
+        // 极坐标转换：笛卡尔 -> 极坐标（相对于目标点）
+        function cartesianToSpherical(x, y, z, targetX, targetY, targetZ) {
+            const dx = x - targetX;
+            const dy = y - targetY;
+            const dz = z - targetZ;
+            const r = Math.sqrt(dx * dx + dy * dy + dz * dz);
+            const theta = Math.atan2(dx, dz);  // 方位角
+            const phi = Math.acos(dy / r);     // 仰角（从Y轴向下）
+            return { r, theta, phi };
+        }
+
+        // 极坐标转换：极坐标 -> 笛卡尔（相对于目标点）
+        function sphericalToCartesian(r, theta, phi, targetX, targetY, targetZ) {
+            const x = targetX + r * Math.sin(phi) * Math.sin(theta);
+            const y = targetY + r * Math.cos(phi);
+            const z = targetZ + r * Math.sin(phi) * Math.cos(theta);
+            return { x, y, z };
+        }
+
+        function getEasing(t) {
+            return easingFunctions[animParams.easing](t);
+        }
+
+        // 初始化调试面板输入框
+        function initDebugPanel() {
+            document.getElementById('anim-start-x').value = animParams.startX;
+            document.getElementById('anim-start-y').value = animParams.startY;
+            document.getElementById('anim-start-z').value = animParams.startZ;
+            document.getElementById('anim-end-x').value = animParams.endX;
+            document.getElementById('anim-end-y').value = animParams.endY;
+            document.getElementById('anim-end-z').value = animParams.endZ;
+            // 目标点
+            document.getElementById('anim-target-start-x').value = animParams.targetStartX;
+            document.getElementById('anim-target-start-y').value = animParams.targetStartY;
+            document.getElementById('anim-target-start-z').value = animParams.targetStartZ;
+            document.getElementById('anim-target-end-x').value = animParams.targetEndX;
+            document.getElementById('anim-target-end-y').value = animParams.targetEndY;
+            document.getElementById('anim-target-end-z').value = animParams.targetEndZ;
+
+            document.getElementById('anim-duration').value = animParams.duration;
+            document.getElementById('anim-easing').value = animParams.easing;
+        }
+
+        // 从面板读取参数
+        function readParamsFromPanel() {
+            animParams.startX = parseFloat(document.getElementById('anim-start-x').value);
+            animParams.startY = parseFloat(document.getElementById('anim-start-y').value);
+            animParams.startZ = parseFloat(document.getElementById('anim-start-z').value);
+            animParams.endX = parseFloat(document.getElementById('anim-end-x').value);
+            animParams.endY = parseFloat(document.getElementById('anim-end-y').value);
+            animParams.endZ = parseFloat(document.getElementById('anim-end-z').value);
+            // 目标点
+            animParams.targetStartX = parseFloat(document.getElementById('anim-target-start-x').value);
+            animParams.targetStartY = parseFloat(document.getElementById('anim-target-start-y').value);
+            animParams.targetStartZ = parseFloat(document.getElementById('anim-target-start-z').value);
+            animParams.targetEndX = parseFloat(document.getElementById('anim-target-end-x').value);
+            animParams.targetEndY = parseFloat(document.getElementById('anim-target-end-y').value);
+            animParams.targetEndZ = parseFloat(document.getElementById('anim-target-end-z').value);
+
+            animParams.duration = parseFloat(document.getElementById('anim-duration').value);
+            animParams.easing = document.getElementById('anim-easing').value;
+        }
+
+        // 设置起点为当前位置（摄像头+目标点）
+        function setStartToCurrent() {
+            document.getElementById('anim-start-x').value = camera.position.x.toFixed(2);
+            document.getElementById('anim-start-y').value = camera.position.y.toFixed(2);
+            document.getElementById('anim-start-z').value = camera.position.z.toFixed(2);
+            // 同时设置目标点
+            document.getElementById('anim-target-start-x').value = controls.target.x.toFixed(2);
+            document.getElementById('anim-target-start-y').value = controls.target.y.toFixed(2);
+            document.getElementById('anim-target-start-z').value = controls.target.z.toFixed(2);
+        }
+
+        // 设置终点为当前位置（摄像头+目标点）
+        function setEndToCurrent() {
+            document.getElementById('anim-end-x').value = camera.position.x.toFixed(2);
+            document.getElementById('anim-end-y').value = camera.position.y.toFixed(2);
+            document.getElementById('anim-end-z').value = camera.position.z.toFixed(2);
+            // 同时设置目标点
+            document.getElementById('anim-target-end-x').value = controls.target.x.toFixed(2);
+            document.getElementById('anim-target-end-y').value = controls.target.y.toFixed(2);
+            document.getElementById('anim-target-end-z').value = controls.target.z.toFixed(2);
+        }
+
+        // ============ 录制功能 ============
+        let recordReady = false;   // 准备录制
+        let isRecording = false;   // 正在录制
+        let recordStartTime = 0;
+        let recordedFrames = [];   // 逐帧录制的数据
+        let isPlayingRecording = false;  // 正在回放录制
+        let playbackFrame = 0;     // 当前回放帧
+
+        function prepareRecording() {
+            if (recordReady || isRecording) {
+                console.log('[R] 已在录制状态，忽略');
+                return;
+            }
+            recordReady = true;
+            console.log('[R] recordReady 设为 true');
+
+            // 显示准备状态
+            const debugEl = document.getElementById('debug-info');
+            debugEl.style.display = 'block';
+            debugEl.style.border = '2px solid #ff0';
+            document.getElementById('record-status').innerHTML = '⏳ 准备录制... 按住鼠标拖动';
+
+            console.log('⏳ 准备录制... 按住鼠标拖动');
+        }
+
+        function startRecording() {
+            if (!recordReady || isRecording) return;
+            recordReady = false;
+            isRecording = true;
+            recordStartTime = performance.now();
+            recordedFrames = [];  // 清空帧数组
+
+            // 记录第一帧
+            recordedFrames.push({
+                px: camera.position.x,
+                py: camera.position.y,
+                pz: camera.position.z,
+                tx: controls.target.x,
+                ty: controls.target.y,
+                tz: controls.target.z
+            });
+
+            // 显示录制状态
+            document.getElementById('debug-info').style.border = '2px solid #f00';
+            document.getElementById('record-status').innerHTML = '🔴 录制中... 松开鼠标结束';
+            console.log('🔴 开始录制...');
+        }
+
+        function stopRecording() {
+            if (!isRecording) return;
+            isRecording = false;
+
+            // 计算时长和帧数
+            const duration = ((performance.now() - recordStartTime) / 1000).toFixed(1);
+
+            // 恢复调试面板样式
+            document.getElementById('debug-info').style.border = 'none';
+            document.getElementById('record-status').innerHTML = `✅ 录制完成 (${duration}秒, ${recordedFrames.length}帧)`;
+
+            console.log(`⏹ 录制结束，时长: ${duration}秒, 帧数: ${recordedFrames.length}`);
+        }
+
+        // 逐帧录制（在 animate 中调用）
+        function recordFrame() {
+            if (!isRecording) return;
+            recordedFrames.push({
+                px: camera.position.x,
+                py: camera.position.y,
+                pz: camera.position.z,
+                tx: controls.target.x,
+                ty: controls.target.y,
+                tz: controls.target.z
+            });
+        }
+
+        // 按 R 键准备录制
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') {
+                if (!cameraAnimating && controls.enabled) {
+                    prepareRecording();
+                }
+            }
+        });
+
+        // 【录制】使用 pointerdown（比 mousedown 更早触发，不会被 OrbitControls 阻止）
+        document.addEventListener('pointerdown', (e) => {
+            console.log('[pointerdown] target:', e.target.tagName, e.target.id || e.target.className);
+            console.log('[pointerdown] recordReady:', recordReady, 'isRecording:', isRecording);
+
+            // 如果准备录制状态，且不是点击调试面板，就开始录制
+            const debugPanel = document.getElementById('debug-info');
+            if (recordReady && !debugPanel.contains(e.target)) {
+                console.log('[pointerdown] >>> 开始录制!');
+                startRecording();
+            }
+        }, true);
+
+        // 【录制】使用 pointerup 结束录制
+        document.addEventListener('pointerup', () => {
+            console.log('[pointerup] isRecording:', isRecording);
+            if (isRecording) {
+                stopRecording();
+            }
+        }, true);
+
+        // ============ 文字配置功能 ============
+        function applyTextConfig() {
+            const overlay = document.querySelector('.text-overlay');
+
+            // 应用位置
+            overlay.style.left = document.getElementById('text-left').value;
+            overlay.style.top = document.getElementById('text-top').value;
+
+            // 清空现有内容
+            overlay.innerHTML = '';
+
+            // 应用每行配置
+            for (let i = 0; i < 2; i++) {
+                const content = document.getElementById(`text-content-${i}`).value;
+                if (!content) continue;
+
+                const fontSize = document.getElementById(`text-size-${i}`).value;
+                const color = document.getElementById(`text-color-${i}`).value;
+                const italic = document.getElementById(`text-italic-${i}`).checked;
+                const font = document.getElementById(`text-font-${i}`).value;
+
+                const el = document.createElement(i === 0 ? 'h1' : 'p');
+                el.textContent = content;
+                el.style.fontSize = fontSize;
+                el.style.color = color;
+                el.style.fontStyle = italic ? 'italic' : 'normal';
+                el.style.fontWeight = 'normal';
+                el.style.margin = i === 0 ? '0 0 12px 0' : '0';
+                el.style.textShadow = '0 0 30px rgba(255,255,255,0.4), 0 0 60px rgba(255,200,220,0.2)';
+                el.style.animation = `float 4s ease-in-out infinite ${i * 0.5}s`;
+
+                // 字体
+                if (font === 'KaiTi') {
+                    el.style.fontFamily = "'KaiTi', '楷体', 'STKaiti', serif";
+                } else if (font === 'sans-serif') {
+                    el.style.fontFamily = "Arial, 'Helvetica Neue', sans-serif";
+                } else {
+                    el.style.fontFamily = "'Times New Roman', Georgia, serif";
+                }
+
+                overlay.appendChild(el);
+            }
+        }
+
+        function printTextConfig() {
+            const config = {
+                left: document.getElementById('text-left').value,
+                top: document.getElementById('text-top').value,
+                lines: []
+            };
+
+            for (let i = 0; i < 2; i++) {
+                config.lines.push({
+                    content: document.getElementById(`text-content-${i}`).value,
+                    fontSize: document.getElementById(`text-size-${i}`).value,
+                    color: document.getElementById(`text-color-${i}`).value,
+                    italic: document.getElementById(`text-italic-${i}`).checked,
+                    font: document.getElementById(`text-font-${i}`).value
+                });
+            }
+
+            console.log('=== 文字配置 ===');
+            console.log(JSON.stringify(config, null, 2));
+            console.log('================');
+            alert(`位置: left=${config.left}, top=${config.top}\n\n行1: ${config.lines[0].content}\n行2: ${config.lines[1].content}\n\n详细配置已输出到控制台 (F12)`);
+        }
+
+        // 重播动画
+        function replayAnimation() {
+            readParamsFromPanel();
+
+            console.log('=== 重播动画 ===');
+            console.log('摄像头起点:', animParams.startX, animParams.startY, animParams.startZ);
+            console.log('摄像头终点:', animParams.endX, animParams.endY, animParams.endZ);
+            console.log('目标点起点:', animParams.targetStartX, animParams.targetStartY, animParams.targetStartZ);
+            console.log('目标点终点:', animParams.targetEndX, animParams.targetEndY, animParams.targetEndZ);
+            console.log('时长:', animParams.duration, '缓动:', animParams.easing);
+
+            // 隐藏文字
+            document.querySelector('.text-overlay').classList.add('hidden');
+            controls.enabled = false;
+
+            // 如果有录制的帧数据，使用逐帧回放
+            if (recordedFrames.length > 1) {
+                console.log(`使用逐帧回放，共 ${recordedFrames.length} 帧`);
+                isPlayingRecording = true;
+                playbackFrame = 0;
+                // 设置到第一帧
+                const f = recordedFrames[0];
+                camera.position.set(f.px, f.py, f.pz);
+                controls.target.set(f.tx, f.ty, f.tz);
+                controls.update();
+            } else {
+                // 否则使用参数插值动画
+                console.log('使用参数插值动画');
+                camera.position.set(animParams.startX, animParams.startY, animParams.startZ);
+                controls.target.set(animParams.targetStartX, animParams.targetStartY, animParams.targetStartZ);
+                controls.update();
+                cameraAnimating = true;
+                cameraAnimProgress = 0;
+            }
+        }
+
+        // 输出参数到控制台
+        function printParams() {
+            readParamsFromPanel();
+            console.log('=== 动画参数 ===');
+            console.log(`摄像头起点: (${animParams.startX}, ${animParams.startY}, ${animParams.startZ})`);
+            console.log(`摄像头终点: (${animParams.endX}, ${animParams.endY}, ${animParams.endZ})`);
+            console.log(`目标点起点: (${animParams.targetStartX}, ${animParams.targetStartY}, ${animParams.targetStartZ})`);
+            console.log(`目标点终点: (${animParams.targetEndX}, ${animParams.targetEndY}, ${animParams.targetEndZ})`);
+            console.log(`时长: ${animParams.duration}秒`);
+            console.log(`缓动: ${animParams.easing}`);
+            console.log('================');
+            alert(`参数已输出到控制台 (F12)\n\n摄像头起点: (${animParams.startX}, ${animParams.startY}, ${animParams.startZ})\n摄像头终点: (${animParams.endX}, ${animParams.endY}, ${animParams.endZ})\n目标点起点: (${animParams.targetStartX}, ${animParams.targetStartY}, ${animParams.targetStartZ})\n目标点终点: (${animParams.targetEndX}, ${animParams.targetEndY}, ${animParams.targetEndZ})\n时长: ${animParams.duration}秒\n缓动: ${animParams.easing}`);
+        }
+
+        // 页面加载后初始化面板
+        setTimeout(initDebugPanel, 100);
+
+        // 点击开场覆盖层
+        document.getElementById('intro-overlay').addEventListener('click', () => {
+            const overlay = document.getElementById('intro-overlay');
+            overlay.style.transition = 'opacity 0.8s ease-out';
+            overlay.style.opacity = '0';
+            overlay.style.pointerEvents = 'none';  // 立即停止拦截鼠标事件
+
+            setTimeout(() => {
+                overlay.style.display = 'none';
+            }, 800);
+
+            // 开始摄像头动画
+            cameraAnimating = true;
+            cameraAnimProgress = 0;
+        });
+
+        // ============ 粒子参数 ============
+        const TREE_COUNT = 50000;
+        const GROUND_COUNT = 40000;
+        const STAR_COUNT = 2000;
+        const ORNAMENT_COUNT = 120;      // 树上彩色装饰球
+        const FLOATING_SNOW_COUNT = 800; // 漂浮的白色圆球（无细节雪花）
+        const SNOWFLAKE_COUNT = 800;     // 真正的六角雪花
+
+        // ============ 创建多种雪花纹理 (8种样式) ============
+        function createSnowflakeTextures() {
+            const textures = [];
+
+            // 样式1: 经典六角雪花（带分支）
+            function drawStyle1(ctx, cx, cy) {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * 26, cy + Math.sin(angle) * 26);
+                    ctx.stroke();
+                    for (let d = 10; d <= 20; d += 10) {
+                        for (let b = -1; b <= 1; b += 2) {
+                            const bx = cx + Math.cos(angle) * d;
+                            const by = cy + Math.sin(angle) * d;
+                            const ba = angle + b * 0.6;
+                            ctx.beginPath();
+                            ctx.moveTo(bx, by);
+                            ctx.lineTo(bx + Math.cos(ba) * 8 * (1 - d / 30), by + Math.sin(ba) * 8 * (1 - d / 30));
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // 样式2: 简单六角星
+            function drawStyle2(ctx, cx, cy) {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * 24, cy + Math.sin(angle) * 24);
+                    ctx.stroke();
+                }
+            }
+
+            // 样式3: 密集分支雪花
+            function drawStyle3(ctx, cx, cy) {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * 22, cy + Math.sin(angle) * 22);
+                    ctx.stroke();
+                    for (let d = 6; d <= 18; d += 6) {
+                        for (let b = -1; b <= 1; b += 2) {
+                            const bx = cx + Math.cos(angle) * d;
+                            const by = cy + Math.sin(angle) * d;
+                            const ba = angle + b * 0.5;
+                            ctx.beginPath();
+                            ctx.moveTo(bx, by);
+                            ctx.lineTo(bx + Math.cos(ba) * 6, by + Math.sin(ba) * 6);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            // 样式4: 圆点雪花
+            function drawStyle4(ctx, cx, cy) {
+                ctx.beginPath();
+                ctx.arc(cx, cy, 4, 0, Math.PI * 2);
+                ctx.fill();
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    const ex = cx + Math.cos(angle) * 20;
+                    const ey = cy + Math.sin(angle) * 20;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(ex, ey);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.arc(ex, ey, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+
+            // 样式5: 星形雪花（8角）
+            function drawStyle5(ctx, cx, cy) {
+                for (let i = 0; i < 8; i++) {
+                    const angle = (i / 8) * Math.PI * 2;
+                    const len = i % 2 === 0 ? 24 : 16;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * len, cy + Math.sin(angle) * len);
+                    ctx.stroke();
+                }
+            }
+
+            // 样式6: 花瓣雪花
+            function drawStyle6(ctx, cx, cy) {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    // 主干
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    const ex = cx + Math.cos(angle) * 20;
+                    const ey = cy + Math.sin(angle) * 20;
+                    ctx.lineTo(ex, ey);
+                    ctx.stroke();
+                    // 花瓣形状（椭圆弧）
+                    ctx.beginPath();
+                    ctx.ellipse(
+                        cx + Math.cos(angle) * 14,
+                        cy + Math.sin(angle) * 14,
+                        4, 8, angle, 0, Math.PI * 2
+                    );
+                    ctx.stroke();
+                }
+            }
+
+            // 样式7: 晶格雪花
+            function drawStyle7(ctx, cx, cy) {
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * 22, cy + Math.sin(angle) * 22);
+                    ctx.stroke();
+                    // 末端菱形
+                    const ex = cx + Math.cos(angle) * 18;
+                    const ey = cy + Math.sin(angle) * 18;
+                    const perpAngle = angle + Math.PI / 2;
+                    ctx.beginPath();
+                    ctx.moveTo(ex + Math.cos(angle) * 6, ey + Math.sin(angle) * 6);
+                    ctx.lineTo(ex + Math.cos(perpAngle) * 4, ey + Math.sin(perpAngle) * 4);
+                    ctx.lineTo(ex - Math.cos(angle) * 2, ey - Math.sin(angle) * 2);
+                    ctx.lineTo(ex - Math.cos(perpAngle) * 4, ey - Math.sin(perpAngle) * 4);
+                    ctx.closePath();
+                    ctx.stroke();
+                }
+            }
+
+            // 样式8: 羽毛雪花（细密分支）
+            function drawStyle8(ctx, cx, cy) {
+                ctx.lineWidth = 1;
+                for (let i = 0; i < 6; i++) {
+                    const angle = (i / 6) * Math.PI * 2;
+                    ctx.beginPath();
+                    ctx.moveTo(cx, cy);
+                    ctx.lineTo(cx + Math.cos(angle) * 24, cy + Math.sin(angle) * 24);
+                    ctx.stroke();
+                    // 细密羽毛状分支
+                    for (let d = 4; d <= 22; d += 3) {
+                        for (let b = -1; b <= 1; b += 2) {
+                            const bx = cx + Math.cos(angle) * d;
+                            const by = cy + Math.sin(angle) * d;
+                            const ba = angle + b * 0.7;
+                            const bLen = 4 * (1 - d / 28);
+                            ctx.beginPath();
+                            ctx.moveTo(bx, by);
+                            ctx.lineTo(bx + Math.cos(ba) * bLen, by + Math.sin(ba) * bLen);
+                            ctx.stroke();
+                        }
+                    }
+                }
+            }
+
+            const styles = [drawStyle1, drawStyle2, drawStyle3, drawStyle4,
+                drawStyle5, drawStyle6, drawStyle7, drawStyle8];
+
+            for (let s = 0; s < styles.length; s++) {
+                const canvas = document.createElement('canvas');
+                canvas.width = 64;
+                canvas.height = 64;
+                const ctx = canvas.getContext('2d');
+                ctx.strokeStyle = 'white';
+                ctx.fillStyle = 'white';
+                ctx.lineWidth = 1.5;
+                ctx.lineCap = 'round';
+                styles[s](ctx, 32, 32);
+                textures.push(new THREE.CanvasTexture(canvas));
+            }
+
+            return textures;
+        }
+
+        const snowflakeTextures = createSnowflakeTextures();
+
+        // ============ 风向系统 ============
+        let windX = 0;      // 当前风向X
+        let windZ = 0;      // 当前风向Z
+        let targetWindX = 0; // 目标风向X
+        let targetWindZ = 0; // 目标风向Z
+        let lastMouseX = 0;
+        let lastMouseZ = 0;
+        let defaultWindPhase = 0; // 默认风向的相位
+
+        // 监听鼠标拖动
+        let isDragging = false;
+        renderer.domElement.addEventListener('mousedown', () => { isDragging = true; });
+        renderer.domElement.addEventListener('mouseup', () => { isDragging = false; });
+        renderer.domElement.addEventListener('mousemove', (e) => {
+            if (isDragging) {
+                const deltaX = e.movementX * 0.01;
+                const deltaY = e.movementY * 0.01;
+                // 鼠标水平移动影响风向X，垂直移动影响风向Z
+                targetWindX += deltaX * 2;
+                targetWindZ += deltaY * 0.5;
+                // 限制范围
+                targetWindX = Math.max(-3, Math.min(3, targetWindX));
+                targetWindZ = Math.max(-1, Math.min(1, targetWindZ));
+            }
+        });
+
+        // ============ 创建树粒子 ============
+        function createTreeParticles() {
+            const positions = new Float32Array(TREE_COUNT * 3);
+            const colors = new Float32Array(TREE_COUNT * 3);
+            const sizes = new Float32Array(TREE_COUNT);
+
+            const colorStops = [
+                { h: 0.0, color: new THREE.Color(1.0, 0.98, 0.95) },
+                { h: 0.12, color: new THREE.Color(1.0, 0.95, 0.88) },
+                { h: 0.25, color: new THREE.Color(1.0, 0.88, 0.80) },
+                { h: 0.38, color: new THREE.Color(1.0, 0.78, 0.75) },
+                { h: 0.50, color: new THREE.Color(1.0, 0.65, 0.68) },
+                { h: 0.62, color: new THREE.Color(1.0, 0.52, 0.60) },
+                { h: 0.75, color: new THREE.Color(0.98, 0.38, 0.52) },
+                { h: 0.88, color: new THREE.Color(0.92, 0.25, 0.45) },
+                { h: 1.0, color: new THREE.Color(0.85, 0.15, 0.38) },
+            ];
+
+            function getColorAtHeight(h) {
+                for (let i = 0; i < colorStops.length - 1; i++) {
+                    if (h >= colorStops[i].h && h <= colorStops[i + 1].h) {
+                        const t = (h - colorStops[i].h) / (colorStops[i + 1].h - colorStops[i].h);
+                        return colorStops[i].color.clone().lerp(colorStops[i + 1].color, t);
+                    }
+                }
+                return colorStops[colorStops.length - 1].color;
+            }
+
+            for (let i = 0; i < TREE_COUNT; i++) {
+                const i3 = i * 3;
+
+                const h = Math.pow(Math.random(), 0.5);
+                const y = h * 9 - 2.5;
+
+                const maxRadius = 3.5 * (1 - h * 0.95);
+                const r = Math.sqrt(Math.random()) * maxRadius;
+                const theta = Math.random() * Math.PI * 2;
+
+                positions[i3] = Math.cos(theta) * r;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = Math.sin(theta) * r;
+
+                const color = getColorAtHeight(h);
+                const brightness = 0.85 + Math.random() * 0.3;
+                colors[i3] = Math.min(1, color.r * brightness);
+                colors[i3 + 1] = Math.min(1, color.g * brightness);
+                colors[i3 + 2] = Math.min(1, color.b * brightness);
+
+                const sizeRand = Math.random();
+                if (sizeRand > 0.98) {
+                    sizes[i] = 0.12 + Math.random() * 0.08;
+                    colors[i3] = colors[i3 + 1] = colors[i3 + 2] = 1.0;
+                } else if (sizeRand > 0.9) {
+                    sizes[i] = 0.07 + Math.random() * 0.05;
+                } else if (sizeRand > 0.6) {
+                    sizes[i] = 0.04 + Math.random() * 0.04;
+                } else {
+                    sizes[i] = 0.02 + Math.random() * 0.03;
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    varying vec3 vColor;
+                    varying float vSize;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    
+                    void main() {
+                        vColor = color;
+                        vSize = size;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        float twinkle = 0.88 + 0.12 * sin(time * 1.5 + position.x * 6.0 + position.y * 3.0);
+                        gl_PointSize = size * pixelRatio * 320.0 / -mvPosition.z * twinkle;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    varying float vSize;
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        float softness = mix(1.8, 1.2, smoothstep(0.02, 0.15, vSize));
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        alpha = pow(alpha, softness);
+                        vec3 finalColor = vColor + vec3(0.3) * max(0.0, 1.0 - dist * 2.5);
+                        gl_FragColor = vec4(finalColor, alpha);
+                    }
+                `,
+                transparent: true,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建银河地面 ============
+        function createGroundParticles() {
+            const positions = new Float32Array(GROUND_COUNT * 3);
+            const colors = new Float32Array(GROUND_COUNT * 3);
+            const sizes = new Float32Array(GROUND_COUNT);
+
+            for (let i = 0; i < GROUND_COUNT; i++) {
+                const i3 = i * 3;
+
+                const rMax = 16;
+                const r = Math.sqrt(Math.random()) * rMax;
+                const theta = Math.random() * Math.PI * 2;
+
+                positions[i3] = Math.cos(theta) * r;
+                positions[i3 + 1] = -2.5 + (Math.random() - 0.5) * 0.2;
+                positions[i3 + 2] = Math.sin(theta) * r;
+
+                const colorMix = r / rMax;
+                if (colorMix < 0.2) {
+                    colors[i3] = 1.0;
+                    colors[i3 + 1] = 0.95;
+                    colors[i3 + 2] = 0.90;
+                } else if (colorMix < 0.5) {
+                    const t = (colorMix - 0.2) / 0.3;
+                    colors[i3] = 1.0 - t * 0.15;
+                    colors[i3 + 1] = 0.95 - t * 0.1;
+                    colors[i3 + 2] = 0.90 + t * 0.1;
+                } else {
+                    colors[i3] = 0.75;
+                    colors[i3 + 1] = 0.85;
+                    colors[i3 + 2] = 1.0;
+                }
+
+                const brightness = 0.7 + 0.4 * Math.pow(1 - colorMix, 1.5);
+                colors[i3] *= brightness;
+                colors[i3 + 1] *= brightness;
+                colors[i3 + 2] *= brightness;
+
+                const sizeRand = Math.random();
+                if (sizeRand > 0.97) {
+                    sizes[i] = 0.06 + Math.random() * 0.04;
+                } else if (sizeRand > 0.8) {
+                    sizes[i] = 0.03 + Math.random() * 0.03;
+                } else {
+                    sizes[i] = 0.015 + Math.random() * 0.02;
+                }
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    varying vec3 vColor;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    void main() {
+                        vColor = color;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        float twinkle = 0.92 + 0.08 * sin(time * 1.0 + position.x * 3.0 + position.z * 3.0);
+                        gl_PointSize = size * pixelRatio * 250.0 / -mvPosition.z * twinkle;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        alpha = pow(alpha, 1.4);
+                        gl_FragColor = vec4(vColor, alpha * 0.9);
+                    }
+                `,
+                transparent: true,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建背景星空 ============
+        function createStars() {
+            const positions = new Float32Array(STAR_COUNT * 3);
+            const sizes = new Float32Array(STAR_COUNT);
+
+            for (let i = 0; i < STAR_COUNT; i++) {
+                const i3 = i * 3;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = 60 + Math.random() * 100;
+
+                positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i3 + 1] = r * Math.cos(phi);
+                positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+                sizes[i] = 0.1 + Math.random() * 0.25;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    varying float vAlpha;
+                    void main() {
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vAlpha = 0.6 + 0.4 * sin(time * 0.3 + position.x * 0.3 + position.y * 0.3);
+                        gl_PointSize = size * pixelRatio * 200.0 / -mvPosition.z;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying float vAlpha;
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, alpha * vAlpha * 0.5);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建顶部星星 (带闪烁) ============
+        function createTopStar() {
+            const count = 600;
+            const positions = new Float32Array(count * 3);
+            const sizes = new Float32Array(count);
+            const phases = new Float32Array(count);  // 闪烁相位
+
+            for (let i = 0; i < count; i++) {
+                const i3 = i * 3;
+                const theta = Math.random() * Math.PI * 2;
+                const phi = Math.acos(2 * Math.random() - 1);
+                const r = Math.pow(Math.random(), 0.5) * 0.7;
+
+                positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+                positions[i3 + 1] = 6.8 + r * Math.cos(phi);
+                positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+                sizes[i] = 0.06 + Math.random() * 0.12;
+                phases[i] = Math.random() * Math.PI * 2;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute float phase;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    varying float vBrightness;
+                    
+                    // 伪随机函数
+                    float rand(float n) {
+                        return fract(sin(n * 12.9898) * 43758.5453);
+                    }
+                    
+                    void main() {
+                        // 多层随机闪烁
+                        float t = time + phase * 100.0;
+                        float r1 = rand(floor(t * 2.0 + phase * 11.0));
+                        float r2 = rand(floor(t * 6.0 + phase * 17.0));
+                        float r3 = rand(floor(t * 12.0 + phase * 31.0));
+                        
+                        // 柔和呼吸 + 随机闪烁 + 突发亮光
+                        float breathe = sin(t * 1.5) * 0.5 + 0.5;
+                        float burst = step(0.88, r3);  // 12%概率突然闪亮
+                        
+                        float twinkle = 0.4 + 0.3 * r1 + 0.2 * breathe + 0.6 * burst;
+                        vBrightness = clamp(twinkle, 0.3, 1.5);
+                        
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        gl_PointSize = size * pixelRatio * 400.0 / -mvPosition.z * (0.7 + 0.3 * vBrightness);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying float vBrightness;
+                    
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        alpha = pow(alpha, 0.9);
+                        
+                        // 金白色渐变
+                        vec3 color = vec3(1.0, 0.98, 0.92) * vBrightness;
+                        gl_FragColor = vec4(color, alpha);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建闪烁灯串 (代替装饰球) ============
+        const LIGHT_COUNT = 150;  // 灯串数量
+        function createTwinklingLights() {
+            const positions = new Float32Array(LIGHT_COUNT * 3);
+            const colors = new Float32Array(LIGHT_COUNT * 3);
+            const sizes = new Float32Array(LIGHT_COUNT);
+            const phases = new Float32Array(LIGHT_COUNT);  // 闪烁相位
+
+            // 温暖浪漫的灯光色
+            const lightColors = [
+                new THREE.Color(1.0, 0.95, 0.8),   // 暖白
+                new THREE.Color(1.0, 0.85, 0.5),   // 金黄
+                new THREE.Color(1.0, 0.7, 0.7),    // 淡粉
+                new THREE.Color(0.9, 0.95, 1.0),   // 冰蓝
+                new THREE.Color(1.0, 0.6, 0.4),    // 橙红
+            ];
+
+            for (let i = 0; i < LIGHT_COUNT; i++) {
+                const i3 = i * 3;
+
+                const h = Math.pow(Math.random(), 0.6);
+                const y = h * 8.5 - 2;
+                const maxR = 3.2 * (1 - h * 0.9);
+                const r = (0.5 + Math.random() * 0.5) * maxR;
+                const theta = Math.random() * Math.PI * 2;
+
+                positions[i3] = Math.cos(theta) * r;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = Math.sin(theta) * r;
+
+                const color = lightColors[Math.floor(Math.random() * lightColors.length)];
+                colors[i3] = color.r;
+                colors[i3 + 1] = color.g;
+                colors[i3 + 2] = color.b;
+
+                sizes[i] = 0.08 + Math.random() * 0.12;
+                phases[i] = Math.random() * Math.PI * 2;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute float phase;
+                    varying vec3 vColor;
+                    varying float vBrightness;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    
+                    // 伪随机函数
+                    float rand(float n) {
+                        return fract(sin(n * 12.9898) * 43758.5453);
+                    }
+                    
+                    void main() {
+                        vColor = color;
+                        
+                        // 多层不规则闪烁
+                        float t = time + phase * 100.0;
+                        float r1 = rand(floor(t * 1.5 + phase * 7.0));  // 慢速随机跳变
+                        float r2 = rand(floor(t * 4.0 + phase * 13.0)); // 快速随机跳变
+                        float r3 = rand(floor(t * 8.0 + phase * 23.0)); // 超快闪烁
+                        
+                        // 平滑过渡 + 随机突发
+                        float smooth1 = sin(t * (1.0 + phase * 2.0)) * 0.5 + 0.5;
+                        float burst = step(0.85, r3);  // 15%概率突然闪亮
+                        
+                        // 组合：基础亮度 + 随机变化 + 突发闪光
+                        float twinkle = 0.2 + 0.4 * r1 + 0.3 * smooth1 + 0.5 * burst;
+                        twinkle = clamp(twinkle, 0.0, 1.5);  // 允许超过1.0
+                        
+                        vBrightness = twinkle;
+                        
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        // 更大的固定尺寸
+                        gl_PointSize = size * pixelRatio * 40.0 * (0.6 + 0.4 * twinkle);
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying vec3 vColor;
+                    varying float vBrightness;
+                    
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        
+                        // 更强的光晕
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        alpha = pow(alpha, 0.8);  // 更柔和更大的光晕
+                        
+                        // 中心更亮，整体更亮
+                        vec3 finalColor = vColor * (1.5 + 1.0 * (1.0 - dist * 2.0));
+                        
+                        gl_FragColor = vec4(finalColor, alpha * vBrightness);
+                    }
+                `,
+                transparent: true,
+                vertexColors: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false,
+                depthTest: false  // 不被其他元素遮挡
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建漂浮的白色圆球 (无细节雪花) ============
+        function createFloatingSnow() {
+            const positions = new Float32Array(FLOATING_SNOW_COUNT * 3);
+            const sizes = new Float32Array(FLOATING_SNOW_COUNT);
+            const velocities = [];
+
+            for (let i = 0; i < FLOATING_SNOW_COUNT; i++) {
+                const i3 = i * 3;
+                // 摄像头本地坐标: 负Z是前方
+                positions[i3] = (Math.random() - 0.5) * 30;
+                positions[i3 + 1] = Math.random() * 20 - 8;
+                positions[i3 + 2] = -5 - Math.random() * 25; // 负Z是前方
+
+                sizes[i] = 0.08 + Math.random() * 0.15;
+                velocities.push({
+                    y: 0.2 + Math.random() * 0.4,
+                    swayX: Math.random() * 0.5,
+                    swayZ: Math.random() * 0.5,
+                    phase: Math.random() * Math.PI * 2
+                });
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    uniform float pixelRatio;
+                    varying float vAlpha;
+                    
+                    void main() {
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vAlpha = 0.7;
+                        gl_PointSize = size * pixelRatio * 150.0 / -mvPosition.z;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    varying float vAlpha;
+                    void main() {
+                        vec2 center = gl_PointCoord - 0.5;
+                        float dist = length(center);
+                        // 柔和的圆形
+                        float alpha = 1.0 - smoothstep(0.0, 0.5, dist);
+                        alpha = pow(alpha, 1.5);
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, alpha * vAlpha);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            const points = new THREE.Points(geometry, material);
+            points.userData.velocities = velocities;
+            return points;
+        }
+
+        // ============ 创建六角雪花 (多样式，靠近摄像头) ============
+        function createSnowflakes() {
+            const positions = new Float32Array(SNOWFLAKE_COUNT * 3);
+            const sizes = new Float32Array(SNOWFLAKE_COUNT);
+            const textureIndices = new Float32Array(SNOWFLAKE_COUNT);
+            const velocities = [];
+
+            for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+                const i3 = i * 3;
+                // 摄像头本地坐标: 负Z是前方
+                positions[i3] = (Math.random() - 0.5) * 25;
+                positions[i3 + 1] = Math.random() * 20 - 8;
+                positions[i3 + 2] = -3 - Math.random() * 20;
+
+                // 更大的尺寸变化范围
+                sizes[i] = 0.3 + Math.random() * 0.8;
+                // 随机分配纹理索引 (0-7)
+                textureIndices[i] = Math.floor(Math.random() * 8);
+                velocities.push({
+                    y: 0.6 + Math.random() * 0.6,  // 基础下落速度
+                    swayAmp: 0.15 + Math.random() * 0.35,  // 摆动幅度
+                    phase: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 2  // 旋转速度
+                });
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('texIndex', new THREE.BufferAttribute(textureIndices, 1));
+
+            // 使用纹理数组
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    textures: { value: snowflakeTextures },
+                    pixelRatio: { value: renderer.getPixelRatio() }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute float texIndex;
+                    uniform float pixelRatio;
+                    varying float vAlpha;
+                    varying float vTexIndex;
+                    
+                    void main() {
+                        vTexIndex = texIndex;
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        vAlpha = 0.7;
+                        gl_PointSize = size * pixelRatio * 120.0 / -mvPosition.z;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    uniform sampler2D textures[8];
+                    varying float vAlpha;
+                    varying float vTexIndex;
+                    
+                    void main() {
+                        vec4 texColor;
+                        int idx = int(vTexIndex);
+                        if (idx == 0) texColor = texture2D(textures[0], gl_PointCoord);
+                        else if (idx == 1) texColor = texture2D(textures[1], gl_PointCoord);
+                        else if (idx == 2) texColor = texture2D(textures[2], gl_PointCoord);
+                        else if (idx == 3) texColor = texture2D(textures[3], gl_PointCoord);
+                        else if (idx == 4) texColor = texture2D(textures[4], gl_PointCoord);
+                        else if (idx == 5) texColor = texture2D(textures[5], gl_PointCoord);
+                        else if (idx == 6) texColor = texture2D(textures[6], gl_PointCoord);
+                        else texColor = texture2D(textures[7], gl_PointCoord);
+                        gl_FragColor = vec4(1.0, 1.0, 1.0, texColor.a * vAlpha);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.AdditiveBlending,
+                depthWrite: false
+            });
+
+            const points = new THREE.Points(geometry, material);
+            points.userData.velocities = velocities;
+            return points;
+        }
+
+        // ============ 添加到场景 ============
+        const treeParticles = createTreeParticles();
+        const groundParticles = createGroundParticles();
+        const stars = createStars();
+        const topStar = createTopStar();
+        const twinklingLights = createTwinklingLights();  // 闪烁灯串
+        const floatingSnow = createFloatingSnow();
+        const snowflakes = createSnowflakes();
+
+        scene.add(stars);
+        scene.add(groundParticles);
+        scene.add(treeParticles);
+        scene.add(topStar);
+        scene.add(twinklingLights);  // 闪烁灯串
+
+        // 雪花添加到摄像头上，使其始终在摄像头前方，不受视角旋转影响
+        camera.add(floatingSnow);
+        camera.add(snowflakes);
+        scene.add(camera); // 需要把摄像头添加到场景才能渲染其子对象
+
+        // ============ 动画 ============
+        let time = 0;
+
+        function animate() {
+            requestAnimationFrame(animate);
+
+            time += 0.016;
+
+            // 摄像头动画
+            if (cameraAnimating) {
+                cameraAnimProgress += 0.016 / animParams.duration;
+
+                if (cameraAnimProgress >= 1) {
+                    cameraAnimProgress = 1;
+                    cameraAnimating = false;
+                    controls.enabled = true;  // 启用控件
+
+                    console.log('[动画] 完成! controls.enabled =', controls.enabled);
+
+                    // 显示文字
+                    document.querySelector('.text-overlay').classList.remove('hidden');
+                }
+
+                const t = getEasing(cameraAnimProgress);
+
+                // 目标点动画（线性插值即可）
+                const targetX = animParams.targetStartX + (animParams.targetEndX - animParams.targetStartX) * t;
+                const targetY = animParams.targetStartY + (animParams.targetEndY - animParams.targetStartY) * t;
+                const targetZ = animParams.targetStartZ + (animParams.targetEndZ - animParams.targetStartZ) * t;
+                controls.target.set(targetX, targetY, targetZ);
+
+                // 摄像头位置动画：使用球面插值
+                const startSpherical = cartesianToSpherical(
+                    animParams.startX, animParams.startY, animParams.startZ,
+                    animParams.targetStartX, animParams.targetStartY, animParams.targetStartZ
+                );
+                const endSpherical = cartesianToSpherical(
+                    animParams.endX, animParams.endY, animParams.endZ,
+                    animParams.targetEndX, animParams.targetEndY, animParams.targetEndZ
+                );
+
+                // 在极坐标空间插值
+                const r = startSpherical.r + (endSpherical.r - startSpherical.r) * t;
+                const theta = startSpherical.theta + (endSpherical.theta - startSpherical.theta) * t;
+                const phi = startSpherical.phi + (endSpherical.phi - startSpherical.phi) * t;
+
+                // 转回笛卡尔坐标
+                const pos = sphericalToCartesian(r, theta, phi, targetX, targetY, targetZ);
+                camera.position.set(pos.x, pos.y, pos.z);
+
+                controls.update();
+            }
+
+            controls.update();
+
+            // 更新着色器 uniform
+            treeParticles.material.uniforms.time.value = time;
+            groundParticles.material.uniforms.time.value = time;
+            stars.material.uniforms.time.value = time;
+            topStar.material.uniforms.time.value = time;
+            twinklingLights.material.uniforms.time.value = time;  // 闪烁灯串
+
+            // 更新调试信息
+            const debugEl = document.getElementById('debug-info');
+            if (debugEl.style.display !== 'none') {
+                const pos = camera.position;
+                const target = controls.target;
+                const dx = pos.x - target.x;
+                const dy = pos.y - target.y;
+                const dz = pos.z - target.z;
+                const dist = Math.sqrt(dx * dx + dy * dy + dz * dz);
+                const azimuth = Math.atan2(dx, dz) * 180 / Math.PI;
+                const elevation = Math.asin(dy / dist) * 180 / Math.PI;
+                document.getElementById('camera-info').innerHTML = `
+                    <b>📍 摄像头位置</b><br>
+                    X: ${pos.x.toFixed(2)}<br>
+                    Y: ${pos.y.toFixed(2)}<br>
+                    Z: ${pos.z.toFixed(2)}<br>
+                    <br>
+                    <b>🎯 极坐标</b><br>
+                    距离: ${dist.toFixed(2)}<br>
+                    水平角: ${azimuth.toFixed(1)}°<br>
+                    仰角: ${elevation.toFixed(1)}°
+                `;
+            }
+
+            // 更新漂浮雪球位置
+            const floatPos = floatingSnow.geometry.attributes.position.array;
+            const floatVel = floatingSnow.userData.velocities;
+            for (let i = 0; i < FLOATING_SNOW_COUNT; i++) {
+                const i3 = i * 3;
+                const vel = floatVel[i];
+
+                floatPos[i3 + 1] -= vel.y * 0.016;
+                floatPos[i3] += Math.sin(time * 0.5 + vel.phase) * vel.swayX * 0.016;
+                floatPos[i3 + 2] += Math.cos(time * 0.4 + vel.phase) * vel.swayZ * 0.016;
+
+                // 循环 (摄像头本地坐标)
+                if (floatPos[i3 + 1] < -10) {
+                    floatPos[i3 + 1] = 12;
+                    floatPos[i3] = (Math.random() - 0.5) * 30;
+                    floatPos[i3 + 2] = -5 - Math.random() * 25;
+                }
+            }
+            floatingSnow.geometry.attributes.position.needsUpdate = true;
+
+            // 更新风向（平滑过渡）
+            defaultWindPhase += 0.003;
+            // 默认风向缓慢变化
+            const defaultWindX = Math.sin(defaultWindPhase) * 0.8;
+            const defaultWindZ = Math.cos(defaultWindPhase * 0.7) * 0.3;
+
+            // 目标风向慢慢回归默认
+            targetWindX = targetWindX * 0.98 + defaultWindX * 0.02;
+            targetWindZ = targetWindZ * 0.98 + defaultWindZ * 0.02;
+
+            // 当前风向平滑追随目标
+            windX += (targetWindX - windX) * 0.05;
+            windZ += (targetWindZ - windZ) * 0.05;
+
+            // 更新六角雪花位置（受风向影响）
+            const snowPos = snowflakes.geometry.attributes.position.array;
+            const snowVel = snowflakes.userData.velocities;
+            for (let i = 0; i < SNOWFLAKE_COUNT; i++) {
+                const i3 = i * 3;
+                const vel = snowVel[i];
+
+                // 下落 + 风向影响 + 小幅摆动
+                snowPos[i3 + 1] -= vel.y * 0.016;
+                snowPos[i3] += (windX + Math.sin(time * 0.8 + vel.phase) * vel.swayAmp) * 0.016;
+                snowPos[i3 + 2] += (windZ + Math.cos(time * 0.6 + vel.phase) * vel.swayAmp * 0.5) * 0.016;
+
+                // 循环 (摄像头本地坐标)
+                if (snowPos[i3 + 1] < -10) {
+                    snowPos[i3 + 1] = 12;
+                    snowPos[i3] = (Math.random() - 0.5) * 25;
+                    snowPos[i3 + 2] = -3 - Math.random() * 20;
+                }
+            }
+            snowflakes.geometry.attributes.position.needsUpdate = true;
+
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        // 按 ` 键切换调试面板
+        window.addEventListener('keydown', (e) => {
+            if (e.key === '`') {
+                const debugEl = document.getElementById('debug-info');
+                debugEl.style.display = debugEl.style.display === 'none' ? 'block' : 'none';
+            }
+        });
+
+        animate();
+    </script>
+</body>
+
+</html>
