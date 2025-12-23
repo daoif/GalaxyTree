@@ -4,6 +4,8 @@
 
 ![预览图](png/g1.png)
 
+> 📺 **演示视频**: [Bilibili 视频展示](https://www.bilibili.com/video/BV1pABuBdEfu)
+
 ## ✨ 主要功能
 
 - **3D 星河粒子树**: 由数万个粒子组成的梦幻圣诞树，伴有呼吸灯效。
