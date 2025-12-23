@@ -1646,203 +1646,8 @@
         window.saveTextToLocal = saveTextToLocal;
 
     </script>
-</head>
 
-<body>
-    <div id="container"></div>
-    <div class="text-overlay hidden">
-        <!-- Content will be populated by JS now -->
-    </div>
-
-    <!-- 开场覆盖层 -->
-    <div id="intro-overlay">
-        <div class="breath-ring"></div>
-    </div>
-
-    <!-- 录制指示器 -->
-    <div id="rec-indicator">● REC</div>
-
-    <!-- 调试面板 (按` 键切换) -->
-    <div id="debug-info">
-        <div id="camera-info"></div>
-
-        <div class="panel-section">
-            <div class="section-title">💾 配置管理</div>
-            <div class="btn-group">
-                <button onclick="configManager.reset()" class="btn btn-danger">重置</button>
-            </div>
-            <div class="btn-group">
-                <button onclick="configManager.export()" class="btn btn-secondary">导出JSON</button>
-                <label class="btn btn-secondary">
-                    导入JSON
-                    <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
-                </label>
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎬 动画参数</div>
-
-            <div class="control-header-row">
-                <span class="label-title">动画起点</span>
-                <button onclick="setStartToCurrent()" class="btn btn-sm">写入当前</button>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-start-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-start-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-start-z" step="0.1">
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="control-header-row">
-                <span class="label-title">动画终点</span>
-                <button onclick="setEndToCurrent()" class="btn btn-sm">写入当前</button>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-end-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-end-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-end-z" step="0.1">
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎯 目标点 (旋转中心)</div>
-
-            <div class="control-header-row">
-                <span class="label-title">目标起点</span>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-target-start-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-target-start-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-target-start-z" step="0.1">
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="control-header-row">
-                <span class="label-title">目标终点</span>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-target-end-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-target-end-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-target-end-z" step="0.1">
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="control-group">
-                <label>时长(秒):</label>
-                <input type="number" id="anim-duration" step="0.1" min="0.5" max="10">
-            </div>
-            <div class="control-group">
-                <label>缓动:</label>
-                <select id="anim-easing">
-                    <option value="linear">Linear</option>
-                    <option value="easeOut" selected>Ease Out</option>
-                    <option value="easeIn">Ease In</option>
-                    <option value="easeInOut">Ease In Out</option>
-                </select>
-            </div>
-
-            <div class="btn-group" style="margin-top:10px;">
-                <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
-                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎥 录制动画</div>
-            <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
-            <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
-        </div>
-        <div class="panel-section">
-            <div class="section-title">📝 文字配置</div>
-
-            <div class="control-group">
-                <label>Left:</label>
-                <input type="text" id="text-left">
-            </div>
-            <div class="control-group">
-                <label>Top:</label>
-                <input type="text" id="text-top">
-            </div>
-
-            <div id="text-lines-config">
-                <div class="text-line-card" data-line="0">
-                    <div class="card-header">行 1</div>
-                    <input type="text" id="text-content-0" class="full-width" placeholder="内容">
-                    <div class="control-row">
-                        <input type="text" id="text-size-0" placeholder="Size" style="width:40%">
-                        <input type="text" id="text-color-0" placeholder="Color" style="width:40%">
-                        <input type="checkbox" id="text-italic-0" title="斜体">
-                    </div>
-                    <select id="text-font-0" class="full-width">
-                        <option value="serif" selected>衬线体 (Serif)</option>
-                        <option value="sans-serif">无衬线 (Sans)</option>
-                        <option value="KaiTi">楷体</option>
-                    </select>
-                </div>
-
-                <div class="text-line-card" data-line="1">
-                    <div class="card-header">行 2</div>
-                    <input type="text" id="text-content-1" class="full-width" placeholder="内容">
-                    <div class="control-row">
-                        <input type="text" id="text-size-1" placeholder="Size" style="width:40%">
-                        <input type="text" id="text-color-1" placeholder="Color" style="width:40%">
-                        <input type="checkbox" id="text-italic-1" title="斜体">
-                    </div>
-                    <select id="text-font-1" class="full-width">
-                        <option value="serif">衬线体 (Serif)</option>
-                        <option value="sans-serif">无衬线 (Sans)</option>
-                        <option value="KaiTi">楷体</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="btn-group" style="margin-top:15px;">
-                <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
-                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
-            </div>
-        </div>
-    </div>
-
-
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-
-
-    <!-- 样式 (移至底部) -->
+    <!-- 样式 (放在script后面，确保在body渲染前解析) -->
     <style>
         * {
             margin: 0;
@@ -2257,6 +2062,200 @@
             /* Slightly reduce label width */
         }
     </style>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div class="text-overlay hidden">
+        <!-- Content will be populated by JS now -->
+    </div>
+
+    <!-- 开场覆盖层 -->
+    <div id="intro-overlay">
+        <div class="breath-ring"></div>
+    </div>
+
+    <!-- 录制指示器 -->
+    <div id="rec-indicator">● REC</div>
+
+    <!-- 调试面板 (按` 键切换) -->
+    <div id="debug-info">
+        <div id="camera-info"></div>
+
+        <div class="panel-section">
+            <div class="section-title">💾 配置管理</div>
+            <div class="btn-group">
+                <button onclick="configManager.reset()" class="btn btn-danger">重置</button>
+            </div>
+            <div class="btn-group">
+                <button onclick="configManager.export()" class="btn btn-secondary">导出JSON</button>
+                <label class="btn btn-secondary">
+                    导入JSON
+                    <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
+                </label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎬 动画参数</div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画起点</span>
+                <button onclick="setStartToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画终点</span>
+                <button onclick="setEndToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎯 目标点 (旋转中心)</div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标起点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标终点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="control-group">
+                <label>时长(秒):</label>
+                <input type="number" id="anim-duration" step="0.1" min="0.5" max="10">
+            </div>
+            <div class="control-group">
+                <label>缓动:</label>
+                <select id="anim-easing">
+                    <option value="linear">Linear</option>
+                    <option value="easeOut" selected>Ease Out</option>
+                    <option value="easeIn">Ease In</option>
+                    <option value="easeInOut">Ease In Out</option>
+                </select>
+            </div>
+
+            <div class="btn-group" style="margin-top:10px;">
+                <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
+                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎥 录制动画</div>
+            <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
+            <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
+        </div>
+        <div class="panel-section">
+            <div class="section-title">📝 文字配置</div>
+
+            <div class="control-group">
+                <label>Left:</label>
+                <input type="text" id="text-left">
+            </div>
+            <div class="control-group">
+                <label>Top:</label>
+                <input type="text" id="text-top">
+            </div>
+
+            <div id="text-lines-config">
+                <div class="text-line-card" data-line="0">
+                    <div class="card-header">行 1</div>
+                    <input type="text" id="text-content-0" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-0" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-0" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-0" title="斜体">
+                    </div>
+                    <select id="text-font-0" class="full-width">
+                        <option value="serif" selected>衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+
+                <div class="text-line-card" data-line="1">
+                    <div class="card-header">行 2</div>
+                    <input type="text" id="text-content-1" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-1" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-1" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-1" title="斜体">
+                    </div>
+                    <select id="text-font-1" class="full-width">
+                        <option value="serif">衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:15px;">
+                <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
+                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
 </body>
 
 </html>
