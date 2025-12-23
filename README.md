@@ -31,7 +31,7 @@
 ## ℹ️ 关于作者
 
 - **技术交流群**: 993975349
-- **项目主页**: [GitHub Repository](https://github.com/YourUsername/GalaxyTree)
+- **项目主页**: [GitHub Repository](https://github.com/daoif/GalaxyTree)
 
 ## 📄 开源协议
 
