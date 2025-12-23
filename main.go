@@ -16,13 +16,17 @@ import (
 var content embed.FS
 
 func main() {
-	// 获取一个可用端口
-	listener, err := net.Listen("tcp", "127.0.0.1:0")
+	// 试图优先监听 1225 端口 (Merry Christmas)
+	listener, err := net.Listen("tcp", "127.0.0.1:1225")
 	if err != nil {
-		panic(err)
+		// 如果 1225 被占用，则回退到随机端口
+		fmt.Printf("⚠️ 端口 1225 被占用，尝试自动分配...\n")
+		listener, err = net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			panic(err)
+		}
 	}
 	port := listener.Addr().(*net.TCPAddr).Port
-	listener.Close()
 
 	// 1. 优先处理外部配置文件请求 (允许用户分发 galaxy_tree_config.json)
 	http.HandleFunc("/config.json", func(w http.ResponseWriter, r *http.Request) {
@@ -51,8 +55,8 @@ func main() {
 	// 自动打开浏览器
 	go openBrowser(url)
 
-	// 启动 HTTP 服务
-	if err := http.ListenAndServe(addr, nil); err != nil {
+	// 启动 HTTP 服务 (使用已创建的 listener)
+	if err := http.Serve(listener, nil); err != nil {
 		panic(err)
 	}
 }
