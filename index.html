@@ -5,616 +5,53 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✨ Galaxy Christmas Tree ✨</title>
-    <style>
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
 
-        body {
-            overflow: hidden;
-            background: #000;
-            font-family: 'Times New Roman', Georgia, serif;
-        }
 
-        #container {
-            width: 100vw;
-            height: 100vh;
-        }
+    <script type="module">
 
-        .text-overlay {
-            position: fixed;
-            left: 8%;
-            top: 38%;
-            pointer-events: none;
-            z-index: 10;
-        }
-
-        .text-overlay h1 {
-            font-size: clamp(32px, 5vw, 56px);
-            font-style: italic;
-            font-weight: normal;
-            color: rgba(255, 255, 255, 0.9);
-            text-shadow:
-                0 0 30px rgba(255, 255, 255, 0.4),
-                0 0 60px rgba(255, 200, 220, 0.2);
-            margin-bottom: 12px;
-            animation: float 4s ease-in-out infinite;
-        }
-
-        .text-overlay p {
-            font-size: clamp(20px, 3vw, 32px);
-            font-family: 'KaiTi', '楷体', 'STKaiti', serif;
-            color: rgba(255, 210, 225, 0.85);
-            text-shadow:
-                0 0 20px rgba(255, 150, 180, 0.4),
-                0 0 40px rgba(255, 100, 150, 0.2);
-            animation: float 4s ease-in-out infinite 0.5s;
-        }
-
-        @keyframes float {
-
-            0%,
-            100% {
-                transform: translateY(0);
-            }
-
-            50% {
-                transform: translateY(-6px);
-            }
-        }
-
-        /* 开场覆盖层 */
-        #intro-overlay {
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100vw;
-            height: 100vh;
-            background: #000;
-            z-index: 100;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-        }
-
-        /* 呼吸光圈 */
-        .breath-ring {
-            width: 80px;
-            height: 80px;
-            border-radius: 50%;
-            border: 2px solid rgba(255, 255, 255, 0.3);
-            animation: breathe 2s ease-in-out infinite;
-            position: relative;
-        }
-
-        .breath-ring::before {
-            content: '';
-            position: absolute;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            width: 20px;
-            height: 20px;
-            border-radius: 50%;
-            background: rgba(255, 255, 255, 0.5);
-            animation: breathe 2s ease-in-out infinite;
-        }
-
-        .breath-ring::after {
-            content: '';
-            position: absolute;
-            top: -20px;
-            left: -20px;
-            right: -20px;
-            bottom: -20px;
-            border-radius: 50%;
-            border: 1px solid rgba(255, 255, 255, 0.15);
-            animation: breathe 2s ease-in-out infinite 0.3s;
-        }
-
-        @keyframes breathe {
-
-            0%,
-            100% {
-                transform: scale(1);
-                opacity: 0.3;
-            }
-
-            50% {
-                transform: scale(1.2);
-                opacity: 0.8;
-            }
-        }
-
-        .breath-ring::before {
-            animation: breathe-inner 2s ease-in-out infinite;
-        }
-
-        @keyframes breathe-inner {
-
-            0%,
-            100% {
-                transform: translate(-50%, -50%) scale(1);
-                opacity: 0.4;
-            }
-
-            50% {
-                transform: translate(-50%, -50%) scale(1.3);
-                opacity: 1;
-            }
-        }
-
-        /* 文字初始隐藏 */
-        .text-overlay.hidden {
-            opacity: 0;
-        }
-
-        .text-overlay {
-            transition: opacity 1.5s ease-in-out;
-        }
-
-        /* 录制指示器 */
-        @keyframes blink {
-            50% {
-                opacity: 0.5;
-            }
-        }
-
-        .rec-ready {
-            color: #ffff00;
-            border: 1px solid #ffff00;
-        }
-
-        .rec-recording {
-            color: #ff0000;
-            border: 1px solid #ff0000;
-            animation: blink 1s infinite;
-        }
-
-        .rec-saved {
-            color: #00ff00;
-            border: 1px solid #00ff00;
-        }
-
-        /* 录制指示器默认样式更新 */
-        #rec-indicator {
-            position: fixed;
-            top: 20px;
-            left: 20px;
-            font-weight: bold;
-            font-family: monospace;
-            z-index: 2000;
-            font-size: 16px;
-            display: none;
-            pointer-events: none;
-            padding: 5px 10px;
-            border-radius: 4px;
-            background: rgba(0, 0, 0, 0.5);
-        }
-    </style>
-</head>
-
-<body>
-    <div id="container"></div>
-    <div class="text-overlay hidden">
-        <!-- Content will be populated by JS now -->
-    </div>
-
-    <!-- 开场覆盖层 -->
-    <div id="intro-overlay">
-        <div class="breath-ring"></div>
-    </div>
-
-    <!-- 录制指示器 -->
-    <div id="rec-indicator">● REC</div>
-
-    <!-- 调试面板 (按` 键切换) -->
-    <div id="debug-info">
-        <div id="camera-info"></div>
-
-        <div class="panel-section">
-            <div class="section-title">💾 配置管理</div>
-            <div class="btn-group">
-                <button onclick="configManager.reset()" class="btn btn-danger">重置</button>
-            </div>
-            <div class="btn-group">
-                <button onclick="configManager.export()" class="btn btn-secondary">导出JSON</button>
-                <label class="btn btn-secondary">
-                    导入JSON
-                    <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
-                </label>
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎬 动画参数</div>
-
-            <div class="control-header-row">
-                <span class="label-title">动画起点</span>
-                <button onclick="setStartToCurrent()" class="btn btn-sm">写入当前</button>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-start-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-start-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-start-z" step="0.1">
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="control-header-row">
-                <span class="label-title">动画终点</span>
-                <button onclick="setEndToCurrent()" class="btn btn-sm">写入当前</button>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-end-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-end-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-end-z" step="0.1">
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎯 目标点 (旋转中心)</div>
-
-            <div class="control-header-row">
-                <span class="label-title">目标起点</span>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-target-start-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-target-start-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-target-start-z" step="0.1">
-            </div>
-
-            <div class="divider"></div>
-
-            <div class="control-header-row">
-                <span class="label-title">目标终点</span>
-            </div>
-            <div class="control-group">
-                <label>X:</label>
-                <input type="number" id="anim-target-end-x" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Y:</label>
-                <input type="number" id="anim-target-end-y" step="0.1">
-            </div>
-            <div class="control-group">
-                <label>Z:</label>
-                <input type="number" id="anim-target-end-z" step="0.1">
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="control-group">
-                <label>时长(秒):</label>
-                <input type="number" id="anim-duration" step="0.1" min="0.5" max="10">
-            </div>
-            <div class="control-group">
-                <label>缓动:</label>
-                <select id="anim-easing">
-                    <option value="linear">Linear</option>
-                    <option value="easeOut" selected>Ease Out</option>
-                    <option value="easeIn">Ease In</option>
-                    <option value="easeInOut">Ease In Out</option>
-                </select>
-            </div>
-
-            <div class="btn-group" style="margin-top:10px;">
-                <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
-                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
-            </div>
-        </div>
-
-        <div class="panel-section">
-            <div class="section-title">🎥 录制动画</div>
-            <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
-            <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
-        </div>
-        <div class="panel-section">
-            <div class="section-title">📝 文字配置</div>
-
-            <div class="control-group">
-                <label>Left:</label>
-                <input type="text" id="text-left">
-            </div>
-            <div class="control-group">
-                <label>Top:</label>
-                <input type="text" id="text-top">
-            </div>
-
-            <div id="text-lines-config">
-                <div class="text-line-card" data-line="0">
-                    <div class="card-header">行 1</div>
-                    <input type="text" id="text-content-0" class="full-width" placeholder="内容">
-                    <div class="control-row">
-                        <input type="text" id="text-size-0" placeholder="Size" style="width:40%">
-                        <input type="text" id="text-color-0" placeholder="Color" style="width:40%">
-                        <input type="checkbox" id="text-italic-0" title="斜体">
-                    </div>
-                    <select id="text-font-0" class="full-width">
-                        <option value="serif" selected>衬线体 (Serif)</option>
-                        <option value="sans-serif">无衬线 (Sans)</option>
-                        <option value="KaiTi">楷体</option>
-                    </select>
-                </div>
-
-                <div class="text-line-card" data-line="1">
-                    <div class="card-header">行 2</div>
-                    <input type="text" id="text-content-1" class="full-width" placeholder="内容">
-                    <div class="control-row">
-                        <input type="text" id="text-size-1" placeholder="Size" style="width:40%">
-                        <input type="text" id="text-color-1" placeholder="Color" style="width:40%">
-                        <input type="checkbox" id="text-italic-1" title="斜体">
-                    </div>
-                    <select id="text-font-1" class="full-width">
-                        <option value="serif">衬线体 (Serif)</option>
-                        <option value="sans-serif">无衬线 (Sans)</option>
-                        <option value="KaiTi">楷体</option>
-                    </select>
-                </div>
-            </div>
-
-            <div class="btn-group" style="margin-top:15px;">
-                <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
-                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- 样式补充 -->
-    <style>
-        #debug-info {
-            position: fixed;
-            top: 20px;
-            right: 20px;
-            width: 300px;
-            max-height: 90vh;
-            overflow-y: auto;
-            background: rgba(18, 18, 24, 0.95);
-            backdrop-filter: blur(10px);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 20px;
-            color: #e0e0e0;
-            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
-            font-size: 13px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
-            z-index: 1000;
-            display: none;
-            /* JS控制 */
-        }
-
-        /* 滚动条美化 */
-        #debug-info::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        #debug-info::-webkit-scrollbar-track {
-            background: rgba(0, 0, 0, 0.1);
-        }
-
-        #debug-info::-webkit-scrollbar-thumb {
-            background: rgba(255, 255, 255, 0.2);
-            border-radius: 3px;
-        }
-
-        .panel-section {
-            margin-bottom: 20px;
-        }
-
-        .section-title {
-            font-weight: 600;
-            color: #fff;
-            margin-bottom: 10px;
-            font-size: 14px;
-            border-left: 3px solid #06a;
-            padding-left: 8px;
-        }
-
-        .control-group {
-            display: flex;
-            align-items: center;
-            margin-bottom: 8px;
-            justify-content: space-between;
-        }
-
-        .control-group label {
-            color: #aaa;
-            flex: 0 0 60px;
-        }
-
-        .control-group input[type="number"],
-        .control-group input[type="text"],
-        .control-group select {
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #444;
-            color: #0f0;
-            padding: 4px 8px;
-            border-radius: 4px;
-            flex: 1;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .control-group input:focus,
-        .control-group select:focus {
-            border-color: #06a;
-        }
-
-        .control-row {
-            display: flex;
-            gap: 10px;
-            margin-bottom: 8px;
-        }
-
-        .control-group.half {
-            flex: 1;
-            margin-bottom: 0;
-        }
-
-        .control-group.half label {
-            flex: 0 0 35px;
-        }
-
-        .btn-group {
-            display: flex;
-            gap: 8px;
-        }
-
-        .btn {
-            flex: 1;
-            padding: 8px 12px;
-            border: none;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 12px;
-            font-weight: 500;
-            transition: all 0.2s;
-            text-align: center;
-            color: #fff;
-            display: inline-block;
-        }
-
-        .btn:hover {
-            filter: brightness(1.1);
-            transform: translateY(-1px);
-        }
-
-        .btn:active {
-            transform: translateY(0);
-        }
-
-        .btn-primary {
-            background: linear-gradient(135deg, #0a0, #080);
-            color: #fff;
-        }
-
-        .btn-action {
-            background: linear-gradient(135deg, #06a, #048);
-            color: #fff;
-        }
-
-        .btn-danger {
-            background: linear-gradient(135deg, #a33, #822);
-            color: #fff;
-        }
-
-        .btn-secondary {
-            background: #333;
-            border: 1px solid #555;
-            color: #ccc;
-        }
-
-        .btn-sm {
-            flex: 0 0 auto;
-            padding: 4px 8px;
-            font-size: 11px;
-            margin-left: 5px;
-            background: #444;
-            color: #ccc;
-        }
-
-        .divider {
-            height: 1px;
-            background: #333;
-            margin: 10px 0;
-        }
-
-        .text-line-card {
-            background: rgba(255, 255, 255, 0.05);
-            padding: 10px;
-            border-radius: 6px;
-            margin-bottom: 10px;
-        }
-
-        .card-header {
-            font-size: 11px;
-            color: #fc0;
-            margin-bottom: 5px;
-            font-weight: bold;
-        }
-
-        .full-width {
-            width: 100%;
-            box-sizing: border-box;
-            margin-bottom: 5px;
-            background: rgba(0, 0, 0, 0.3);
-            border: 1px solid #444;
-            color: #fff;
-            padding: 5px;
-            border-radius: 4px;
-        }
-
-        kbd {
-            background: #444;
-            padding: 2px 6px;
-            border-radius: 4px;
-            font-family: monospace;
-            border-bottom: 2px solid #222;
-        }
-
-        .hint-text {
-            color: #888;
-            font-size: 12px;
-        }
-
-        /* Optimize Layout */
-        #debug-info {
-            box-sizing: border-box;
-            width: 300px !important;
-            /* Force width */
-        }
-
-        .control-header-row {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-bottom: 8px;
-            padding-right: 2px;
-        }
-
-        .label-title {
-            color: #ccc;
-            font-size: 12px;
-            font-weight: bold;
-        }
-
-        /* Make inputs in Animation section tighter */
-        .panel-section .control-group label {
-            flex: 0 0 50px;
-            /* Slightly reduce label width */
-        }
-    </style>
-
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
-
-    <script>
         const container = document.getElementById('container');
         const scene = new THREE.Scene();
+
+
+        const INITIAL_CONFIG_JSON = `{
+  "animation": {
+    "startX": -1.7,
+    "startY": 14.4,
+    "startZ": -2.2,
+    "endX": -6.4,
+    "endY": 4.4,
+    "endZ": 10.7,
+    "targetStartX": 0,
+    "targetStartY": 6,
+    "targetStartZ": 0,
+    "targetEndX": 0,
+    "targetEndY": 2,
+    "targetEndZ": 0,
+    "duration": 2.5,
+    "easing": "easeOut",
+    "recordedFrames": []
+  },
+  "text": {
+    "left": "8%",
+    "top": "38%",
+    "lines": [
+      {
+        "content": "Merry Christmas",
+        "fontSize": "clamp(32px, 5vw, 56px)",
+        "color": "rgba(255,255,255,0.9)",
+        "italic": true,
+        "font": "serif"
+      },
+      {
+        "content": "我爱你，宝贝1111",
+        "fontSize": "clamp(20px, 3vw, 32px)",
+        "color": "rgba(255,210,225,0.85)",
+        "italic": false,
+        "font": "KaiTi"
+      }
+    ]
+  }
+}`;
 
         // ============ 录制功能变量 (需提前声明) ============
         let recordReady = false;   // 准备录制
@@ -625,40 +62,9 @@
         let playbackFrame = 0;     // 当前回放帧
 
         // ============ 配置管理系统 ============
-        const DEFAULT_CONFIG = {
-            animation: {
-                startX: -1.7, startY: 14.4, startZ: -2.2,
-                endX: -6.4, endY: 4.4, endZ: 10.7,
-                targetStartX: 0, targetStartY: 6, targetStartZ: 0,
-                targetEndX: 0, targetEndY: 2, targetEndZ: 0,
-                duration: 2.5,
-                easing: 'easeOut',
-                recordedFrames: []
-            },
-            text: {
-                left: '8%',
-                top: '38%',
-                lines: [
-                    {
-                        content: 'Merry Christmas',
-                        fontSize: 'clamp(32px, 5vw, 56px)',
-                        color: 'rgba(255,255,255,0.9)',
-                        italic: true,
-                        font: 'serif'
-                    },
-                    {
-                        content: '我爱你，宝贝',
-                        fontSize: 'clamp(20px, 3vw, 32px)',
-                        color: 'rgba(255,210,225,0.85)',
-                        italic: false,
-                        font: 'KaiTi'
-                    }
-                ]
-            }
-        };
+        const DEFAULT_CONFIG = JSON.parse(INITIAL_CONFIG_JSON);
+        let appConfig = JSON.parse(INITIAL_CONFIG_JSON);
 
-        // 当前配置
-        let appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
 
         const configManager = {
             // 加载配置：LocalStorage > Default
@@ -2229,7 +1635,628 @@
         });
 
         animate();
+
+        // Export functions to window for HTML access
+        window.configManager = configManager;
+        window.setStartToCurrent = setStartToCurrent;
+        window.setEndToCurrent = setEndToCurrent;
+        window.replayAnimation = replayAnimation;
+        window.saveAnimationToLocal = saveAnimationToLocal;
+        window.applyTextConfig = applyTextConfig;
+        window.saveTextToLocal = saveTextToLocal;
+
     </script>
+</head>
+
+<body>
+    <div id="container"></div>
+    <div class="text-overlay hidden">
+        <!-- Content will be populated by JS now -->
+    </div>
+
+    <!-- 开场覆盖层 -->
+    <div id="intro-overlay">
+        <div class="breath-ring"></div>
+    </div>
+
+    <!-- 录制指示器 -->
+    <div id="rec-indicator">● REC</div>
+
+    <!-- 调试面板 (按` 键切换) -->
+    <div id="debug-info">
+        <div id="camera-info"></div>
+
+        <div class="panel-section">
+            <div class="section-title">💾 配置管理</div>
+            <div class="btn-group">
+                <button onclick="configManager.reset()" class="btn btn-danger">重置</button>
+            </div>
+            <div class="btn-group">
+                <button onclick="configManager.export()" class="btn btn-secondary">导出JSON</button>
+                <label class="btn btn-secondary">
+                    导入JSON
+                    <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
+                </label>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎬 动画参数</div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画起点</span>
+                <button onclick="setStartToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">动画终点</span>
+                <button onclick="setEndToCurrent()" class="btn btn-sm">写入当前</button>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎯 目标点 (旋转中心)</div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标起点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-start-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-start-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-start-z" step="0.1">
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="control-header-row">
+                <span class="label-title">目标终点</span>
+            </div>
+            <div class="control-group">
+                <label>X:</label>
+                <input type="number" id="anim-target-end-x" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Y:</label>
+                <input type="number" id="anim-target-end-y" step="0.1">
+            </div>
+            <div class="control-group">
+                <label>Z:</label>
+                <input type="number" id="anim-target-end-z" step="0.1">
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="control-group">
+                <label>时长(秒):</label>
+                <input type="number" id="anim-duration" step="0.1" min="0.5" max="10">
+            </div>
+            <div class="control-group">
+                <label>缓动:</label>
+                <select id="anim-easing">
+                    <option value="linear">Linear</option>
+                    <option value="easeOut" selected>Ease Out</option>
+                    <option value="easeIn">Ease In</option>
+                    <option value="easeInOut">Ease In Out</option>
+                </select>
+            </div>
+
+            <div class="btn-group" style="margin-top:10px;">
+                <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
+                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎥 录制动画</div>
+            <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
+            <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
+        </div>
+        <div class="panel-section">
+            <div class="section-title">📝 文字配置</div>
+
+            <div class="control-group">
+                <label>Left:</label>
+                <input type="text" id="text-left">
+            </div>
+            <div class="control-group">
+                <label>Top:</label>
+                <input type="text" id="text-top">
+            </div>
+
+            <div id="text-lines-config">
+                <div class="text-line-card" data-line="0">
+                    <div class="card-header">行 1</div>
+                    <input type="text" id="text-content-0" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-0" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-0" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-0" title="斜体">
+                    </div>
+                    <select id="text-font-0" class="full-width">
+                        <option value="serif" selected>衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+
+                <div class="text-line-card" data-line="1">
+                    <div class="card-header">行 2</div>
+                    <input type="text" id="text-content-1" class="full-width" placeholder="内容">
+                    <div class="control-row">
+                        <input type="text" id="text-size-1" placeholder="Size" style="width:40%">
+                        <input type="text" id="text-color-1" placeholder="Color" style="width:40%">
+                        <input type="checkbox" id="text-italic-1" title="斜体">
+                    </div>
+                    <select id="text-font-1" class="full-width">
+                        <option value="serif">衬线体 (Serif)</option>
+                        <option value="sans-serif">无衬线 (Sans)</option>
+                        <option value="KaiTi">楷体</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="btn-group" style="margin-top:15px;">
+                <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
+                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
+            </div>
+        </div>
+    </div>
+
+
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.128.0/examples/js/controls/OrbitControls.js"></script>
+
+
+
+    <!-- 样式 (移至底部) -->
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            overflow: hidden;
+            background: #000;
+            font-family: 'Times New Roman', Georgia, serif;
+        }
+
+        #container {
+            width: 100vw;
+            height: 100vh;
+        }
+
+        .text-overlay {
+            position: fixed;
+            left: 8%;
+            top: 38%;
+            pointer-events: none;
+            z-index: 10;
+        }
+
+        .text-overlay h1 {
+            font-size: clamp(32px, 5vw, 56px);
+            font-style: italic;
+            font-weight: normal;
+            color: rgba(255, 255, 255, 0.9);
+            text-shadow:
+                0 0 30px rgba(255, 255, 255, 0.4),
+                0 0 60px rgba(255, 200, 220, 0.2);
+            margin-bottom: 12px;
+            animation: float 4s ease-in-out infinite;
+        }
+
+        .text-overlay p {
+            font-size: clamp(20px, 3vw, 32px);
+            font-family: 'KaiTi', '楷体', 'STKaiti', serif;
+            color: rgba(255, 210, 225, 0.85);
+            text-shadow:
+                0 0 20px rgba(255, 150, 180, 0.4),
+                0 0 40px rgba(255, 100, 150, 0.2);
+            animation: float 4s ease-in-out infinite 0.5s;
+        }
+
+        @keyframes float {
+
+            0%,
+            100% {
+                transform: translateY(0);
+            }
+
+            50% {
+                transform: translateY(-6px);
+            }
+        }
+
+        /* 开场覆盖层 */
+        #intro-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: #000;
+            z-index: 100;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+        }
+
+        /* 呼吸光圈 */
+        .breath-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            animation: breathe 2s ease-in-out infinite;
+            position: relative;
+        }
+
+        .breath-ring::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.5);
+            animation: breathe 2s ease-in-out infinite;
+        }
+
+        .breath-ring::after {
+            content: '';
+            position: absolute;
+            top: -20px;
+            left: -20px;
+            right: -20px;
+            bottom: -20px;
+            border-radius: 50%;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            animation: breathe 2s ease-in-out infinite 0.3s;
+        }
+
+        @keyframes breathe {
+
+            0%,
+            100% {
+                transform: scale(1);
+                opacity: 0.3;
+            }
+
+            50% {
+                transform: scale(1.2);
+                opacity: 0.8;
+            }
+        }
+
+        .breath-ring::before {
+            animation: breathe-inner 2s ease-in-out infinite;
+        }
+
+        @keyframes breathe-inner {
+
+            0%,
+            100% {
+                transform: translate(-50%, -50%) scale(1);
+                opacity: 0.4;
+            }
+
+            50% {
+                transform: translate(-50%, -50%) scale(1.3);
+                opacity: 1;
+            }
+        }
+
+        /* 文字初始隐藏 */
+        .text-overlay.hidden {
+            opacity: 0;
+        }
+
+        .text-overlay {
+            transition: opacity 1.5s ease-in-out;
+        }
+
+        /* 录制指示器 */
+        @keyframes blink {
+            50% {
+                opacity: 0.5;
+            }
+        }
+
+        .rec-ready {
+            color: #ffff00;
+            border: 1px solid #ffff00;
+        }
+
+        .rec-recording {
+            color: #ff0000;
+            border: 1px solid #ff0000;
+            animation: blink 1s infinite;
+        }
+
+        .rec-saved {
+            color: #00ff00;
+            border: 1px solid #00ff00;
+        }
+
+        /* 录制指示器默认样式更新 */
+        #rec-indicator {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            font-weight: bold;
+            font-family: monospace;
+            z-index: 2000;
+            font-size: 16px;
+            display: none;
+            pointer-events: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            background: rgba(0, 0, 0, 0.5);
+        }
+
+
+        /* 调试面板样式 */
+        #debug-info {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 300px;
+            max-height: 90vh;
+            overflow-y: auto;
+            background: rgba(18, 18, 24, 0.95);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            color: #e0e0e0;
+            font-family: 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            font-size: 13px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            z-index: 1000;
+            display: none;
+            /* JS控制 */
+        }
+
+        /* 滚动条美化 */
+        #debug-info::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        #debug-info::-webkit-scrollbar-track {
+            background: rgba(0, 0, 0, 0.1);
+        }
+
+        #debug-info::-webkit-scrollbar-thumb {
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 3px;
+        }
+
+        .panel-section {
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 10px;
+            font-size: 14px;
+            border-left: 3px solid #06a;
+            padding-left: 8px;
+        }
+
+        .control-group {
+            display: flex;
+            align-items: center;
+            margin-bottom: 8px;
+            justify-content: space-between;
+        }
+
+        .control-group label {
+            color: #aaa;
+            flex: 0 0 60px;
+        }
+
+        .control-group input[type="number"],
+        .control-group input[type="text"],
+        .control-group select {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: #0f0;
+            padding: 4px 8px;
+            border-radius: 4px;
+            flex: 1;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .control-group input:focus,
+        .control-group select:focus {
+            border-color: #06a;
+        }
+
+        .control-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 8px;
+        }
+
+        .control-group.half {
+            flex: 1;
+            margin-bottom: 0;
+        }
+
+        .control-group.half label {
+            flex: 0 0 35px;
+        }
+
+        .btn-group {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 8px 12px;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: center;
+            color: #fff;
+            display: inline-block;
+        }
+
+        .btn:hover {
+            filter: brightness(1.1);
+            transform: translateY(-1px);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #0a0, #080);
+            color: #fff;
+        }
+
+        .btn-action {
+            background: linear-gradient(135deg, #06a, #048);
+            color: #fff;
+        }
+
+        .btn-danger {
+            background: linear-gradient(135deg, #a33, #822);
+            color: #fff;
+        }
+
+        .btn-secondary {
+            background: #333;
+            border: 1px solid #555;
+            color: #ccc;
+        }
+
+        .btn-sm {
+            flex: 0 0 auto;
+            padding: 4px 8px;
+            font-size: 11px;
+            margin-left: 5px;
+            background: #444;
+            color: #ccc;
+        }
+
+        .divider {
+            height: 1px;
+            background: #333;
+            margin: 10px 0;
+        }
+
+        .text-line-card {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 10px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+
+        .card-header {
+            font-size: 11px;
+            color: #fc0;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+
+        .full-width {
+            width: 100%;
+            box-sizing: border-box;
+            margin-bottom: 5px;
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid #444;
+            color: #fff;
+            padding: 5px;
+            border-radius: 4px;
+        }
+
+        kbd {
+            background: #444;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: monospace;
+            border-bottom: 2px solid #222;
+        }
+
+        .hint-text {
+            color: #888;
+            font-size: 12px;
+        }
+
+        /* Optimize Layout */
+        #debug-info {
+            box-sizing: border-box;
+            width: 300px !important;
+            /* Force width */
+        }
+
+        .control-header-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+            padding-right: 2px;
+        }
+
+        .label-title {
+            color: #ccc;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        /* Make inputs in Animation section tighter */
+        .panel-section .control-group label {
+            flex: 0 0 50px;
+            /* Slightly reduce label width */
+        }
+    </style>
 </body>
 
 </html>
