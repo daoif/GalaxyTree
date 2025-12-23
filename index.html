@@ -58,6 +58,10 @@
     "type": "coin",
     "heartBeatSpeed": 1.5,
     "heartBeatScale": 0.15
+  },
+  "autoRotate": {
+    "enabled": true,
+    "speed": 2.0
   }
 }`;
 
@@ -96,6 +100,7 @@
 
                         // 应用配置
                         initDebugPanel();
+                        if (window.initAutoRotatePanel) window.initAutoRotatePanel();
                         applyTextConfig();
                         if (window.initSpiralOrnaments) window.initSpiralOrnaments();
                     })
@@ -120,12 +125,15 @@
                             }
                             // 无论如何都要初始化面板
                             initDebugPanel();
+                            if (window.initAutoRotatePanel) window.initAutoRotatePanel();
                             applyTextConfig();
                             if (window.initSpiralOrnaments) window.initSpiralOrnaments();
                         } catch (e) {
                             console.error('配置加载失败，已自动恢复默认', e);
                             appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-                            initDebugPanel();
+                            initOrnamentPanel();
+                            initTextPanel();
+                            initAutoRotatePanel();
                         }
                     });
             },
@@ -2249,6 +2257,12 @@
 
                     console.log('[动画] 完成! controls.enabled =', controls.enabled);
 
+                    // 启用自动旋转 (若配置开启)
+                    if (appConfig.autoRotate && appConfig.autoRotate.enabled) {
+                        controls.autoRotate = true;
+                        controls.autoRotateSpeed = appConfig.autoRotate.speed || 2.0;
+                    }
+
                     // 显示文字
                     document.querySelector('.text-overlay').classList.remove('hidden');
                 }
@@ -2399,6 +2413,49 @@
         window.saveAnimationToLocal = saveAnimationToLocal;
         window.applyTextConfig = applyTextConfig;
         window.saveTextToLocal = saveTextToLocal;
+
+        // ============ 自动旋转配置 ============
+        function initAutoRotatePanel() {
+            const config = appConfig.autoRotate || { enabled: true, speed: 2.0 };
+            const enabledEl = document.getElementById('autorotate-enabled');
+            const speedEl = document.getElementById('autorotate-speed');
+
+            if (enabledEl) enabledEl.checked = config.enabled;
+            if (speedEl) speedEl.value = config.speed;
+        }
+
+        function onAutoRotateConfigChange() {
+            // 实时更新（如果在非动画状态）
+            if (!cameraAnimating && !isPlayingRecording && controls.enabled) {
+                applyAutoRotateConfig();
+            }
+        }
+
+        function applyAutoRotateConfig() {
+            const enabledEl = document.getElementById('autorotate-enabled');
+            const speedEl = document.getElementById('autorotate-speed');
+            if (!enabledEl || !speedEl) return;
+
+            const enabled = enabledEl.checked;
+            const speed = parseFloat(speedEl.value) || 2.0;
+
+            appConfig.autoRotate = { enabled, speed };
+
+            // 直接应用到 controls
+            controls.autoRotate = enabled;
+            controls.autoRotateSpeed = speed;
+        }
+
+        function saveAutoRotateToLocal() {
+            applyAutoRotateConfig();
+            configManager.save();
+        }
+
+        // Export new functions
+        window.initAutoRotatePanel = initAutoRotatePanel;
+        window.onAutoRotateConfigChange = onAutoRotateConfigChange;
+        window.applyAutoRotateConfig = applyAutoRotateConfig;
+        window.saveAutoRotateToLocal = saveAutoRotateToLocal;
 
     </script>
 
@@ -2950,6 +3007,23 @@
             <div class="btn-group" style="margin-top:10px;">
                 <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
                 <button onclick="saveAnimationToLocal()" class="btn btn-action">💾 保存配置</button>
+            </div>
+        </div>
+
+        <div class="panel-section">
+            <div class="section-title">🔄 自动旋转</div>
+            <div class="control-group">
+                <label>开启:</label>
+                <input type="checkbox" id="autorotate-enabled" onchange="onAutoRotateConfigChange()">
+            </div>
+            <div class="control-group">
+                <label>速度:</label>
+                <input type="number" id="autorotate-speed" step="0.5" min="0.1" max="20"
+                    onchange="onAutoRotateConfigChange()">
+            </div>
+            <div class="btn-group" style="margin-top:10px;">
+                <button onclick="applyAutoRotateConfig()" class="btn btn-action">✨ 应用旋转</button>
+                <button onclick="saveAutoRotateToLocal()" class="btn btn-action">💾 保存配置</button>
             </div>
         </div>
 
