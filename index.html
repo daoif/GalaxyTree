@@ -121,6 +121,7 @@
                             // 无论如何都要初始化面板
                             initDebugPanel();
                             applyTextConfig();
+                            if (window.initSpiralOrnaments) window.initSpiralOrnaments();
                         } catch (e) {
                             console.error('配置加载失败，已自动恢复默认', e);
                             appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
