@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>✨ Galaxy Christmas Tree ✨</title>
 
+    <!-- 预加载金币图片 -->
+    <link rel="preload" href="png/g1.png" as="image">
 
     <script type="module">
 
@@ -50,6 +52,12 @@
         "font": "KaiTi"
       }
     ]
+  },
+  "ornament": {
+    "enabled": true,
+    "type": "coin",
+    "heartBeatSpeed": 1.5,
+    "heartBeatScale": 0.15
   }
 }`;
 
@@ -86,6 +94,7 @@
                             }
                         }
                         if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text };
+                        if (parsed.ornament) appConfig.ornament = { ...DEFAULT_CONFIG.ornament, ...parsed.ornament };
 
                         console.log('✅ 配置已从 LocalStorage 加载');
                     } else {
@@ -141,6 +150,11 @@
                         // 刷新 UI
                         initDebugPanel();
                         applyTextConfig();
+
+                        // 重新初始化装饰物
+                        if (typeof window.initSpiralOrnaments === 'function') {
+                            window.initSpiralOrnaments();
+                        }
 
                         alert('✅ 配置导入成功！');
                     } catch (err) {
@@ -309,6 +323,25 @@
                 document.getElementById(`text-color-${i}`).value = line.color;
                 document.getElementById(`text-italic-${i}`).checked = line.italic;
                 document.getElementById(`text-font-${i}`).value = line.font;
+            }
+
+            // 初始化装饰物配置面板
+            const orn = appConfig.ornament || { enabled: true, type: 'coin', heartBeatSpeed: 1.5, heartBeatScale: 0.15 };
+            const ornEnabledEl = document.getElementById('ornament-enabled');
+            const ornTypeEl = document.getElementById('ornament-type');
+            const heartOptionsEl = document.getElementById('heart-options');
+
+            if (ornEnabledEl) ornEnabledEl.checked = orn.enabled !== false;
+            if (ornTypeEl) ornTypeEl.value = orn.type || 'coin';
+            if (document.getElementById('heart-beat-speed')) {
+                document.getElementById('heart-beat-speed').value = orn.heartBeatSpeed || 1.5;
+            }
+            if (document.getElementById('heart-beat-scale')) {
+                document.getElementById('heart-beat-scale').value = orn.heartBeatScale || 0.15;
+            }
+            // 显示/隐藏桃心选项
+            if (heartOptionsEl) {
+                heartOptionsEl.style.display = (orn.type === 'heart') ? 'block' : 'none';
             }
 
             // 立即应用文字配置显示出来
@@ -545,6 +578,61 @@
                 overlay.appendChild(el);
             });
         }
+
+        // 装饰物配置变更时的回调（显示/隐藏桃心选项）
+        function onOrnamentConfigChange() {
+            const typeEl = document.getElementById('ornament-type');
+            const heartOptionsEl = document.getElementById('heart-options');
+            if (typeEl && heartOptionsEl) {
+                heartOptionsEl.style.display = (typeEl.value === 'heart') ? 'block' : 'none';
+            }
+        }
+
+        // 应用装饰物配置
+        function applyOrnamentConfig() {
+            const enabled = document.getElementById('ornament-enabled')?.checked ?? true;
+            const type = document.getElementById('ornament-type')?.value || 'coin';
+            const heartBeatSpeed = parseFloat(document.getElementById('heart-beat-speed')?.value) || 1.5;
+            const heartBeatScale = parseFloat(document.getElementById('heart-beat-scale')?.value) || 0.15;
+
+            // 更新配置
+            appConfig.ornament = {
+                enabled,
+                type,
+                heartBeatSpeed,
+                heartBeatScale
+            };
+
+            // 重新初始化装饰物
+            if (typeof window.initSpiralOrnaments === 'function') {
+                window.initSpiralOrnaments();
+            } else {
+                console.warn('❌ initSpiralOrnaments 函数未找到');
+            }
+
+            console.log('✅ 装饰物配置已应用:', appConfig.ornament);
+        }
+
+        // 保存装饰物配置到LocalStorage
+        function saveOrnamentToLocal() {
+            try {
+                applyOrnamentConfig();
+
+                const savedStr = localStorage.getItem('galaxy_tree_config');
+                let savedConfig = savedStr ? JSON.parse(savedStr) : {};
+                savedConfig.ornament = appConfig.ornament;
+                localStorage.setItem('galaxy_tree_config', JSON.stringify(savedConfig));
+
+                alert('✅ 装饰物配置已写入 Local!');
+            } catch (e) {
+                alert('❌ 保存失败: ' + e.message);
+            }
+        }
+
+        // 暴露装饰物相关函数到全局（供HTML onclick调用）
+        window.onOrnamentConfigChange = onOrnamentConfigChange;
+        window.applyOrnamentConfig = applyOrnamentConfig;
+        window.saveOrnamentToLocal = saveOrnamentToLocal;
 
         function printTextConfig() {
             updateAppConfigFromInputs();
@@ -1092,24 +1180,108 @@
             return new THREE.Points(geometry, material);
         }
 
-        // ============ 创建顶部星星 (带闪烁) ============
+        // ============ 创建顶部梅尔卡巴晶体 (Merkaba - 两个相交的正四面体) ============
         function createTopStar() {
-            const count = 600;
+            const count = 2000;  // 粒子数量
             const positions = new Float32Array(count * 3);
             const sizes = new Float32Array(count);
             const phases = new Float32Array(count);  // 闪烁相位
 
+            const starCenterY = 8.0;  // 晶体中心高度（提高避免与树重合）
+            const scale = 1.2;        // 晶体整体大小
+
+            // 正四面体顶点（向上的四面体）
+            const sqrt2 = Math.sqrt(2);
+            const sqrt6 = Math.sqrt(6);
+            const tetra1 = [
+                { x: 0, y: 1, z: 0 },                          // 顶点
+                { x: sqrt2 * 2 / 3, y: -1 / 3, z: 0 },             // 底面顶点1
+                { x: -sqrt2 / 3, y: -1 / 3, z: sqrt6 / 3 },          // 底面顶点2
+                { x: -sqrt2 / 3, y: -1 / 3, z: -sqrt6 / 3 }          // 底面顶点3
+            ];
+
+            // 正四面体顶点（向下的四面体，旋转60度）
+            const tetra2 = [
+                { x: 0, y: -1, z: 0 },                         // 底点
+                { x: -sqrt2 * 2 / 3, y: 1 / 3, z: 0 },             // 顶面顶点1
+                { x: sqrt2 / 3, y: 1 / 3, z: -sqrt6 / 3 },           // 顶面顶点2
+                { x: sqrt2 / 3, y: 1 / 3, z: sqrt6 / 3 }             // 顶面顶点3
+            ];
+
+            // 收集所有边（每个四面体6条边，共12条边）
+            const edges = [];
+            const addEdges = (verts) => {
+                for (let i = 0; i < 4; i++) {
+                    for (let j = i + 1; j < 4; j++) {
+                        edges.push({ v1: verts[i], v2: verts[j] });
+                    }
+                }
+            };
+            addEdges(tetra1);
+            addEdges(tetra2);
+
+            // 收集所有顶点（用于顶点发光）
+            const vertices = [...tetra1, ...tetra2];
+
             for (let i = 0; i < count; i++) {
                 const i3 = i * 3;
-                const theta = Math.random() * Math.PI * 2;
-                const phi = Math.acos(2 * Math.random() - 1);
-                const r = Math.pow(Math.random(), 0.5) * 0.7;
+                const genType = Math.random();
 
-                positions[i3] = r * Math.sin(phi) * Math.cos(theta);
-                positions[i3 + 1] = 6.8 + r * Math.cos(phi);
-                positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+                if (genType < 0.55) {
+                    // 55%: 沿晶体边缘分布
+                    const edge = edges[Math.floor(Math.random() * edges.length)];
+                    const t = Math.random();  // 沿边的位置
 
-                sizes[i] = 0.06 + Math.random() * 0.12;
+                    // 边缘有轻微厚度
+                    const thickness = 0.03;
+                    const offsetX = (Math.random() - 0.5) * thickness;
+                    const offsetY = (Math.random() - 0.5) * thickness;
+                    const offsetZ = (Math.random() - 0.5) * thickness;
+
+                    const x = edge.v1.x + t * (edge.v2.x - edge.v1.x);
+                    const y = edge.v1.y + t * (edge.v2.y - edge.v1.y);
+                    const z = edge.v1.z + t * (edge.v2.z - edge.v1.z);
+
+                    positions[i3] = x * scale + offsetX;
+                    positions[i3 + 1] = starCenterY + y * scale + offsetY;
+                    positions[i3 + 2] = z * scale + offsetZ;
+
+                    sizes[i] = 0.06 + Math.random() * 0.06;
+                } else if (genType < 0.75) {
+                    // 20%: 顶点处集中发光
+                    const vertex = vertices[Math.floor(Math.random() * vertices.length)];
+                    const spread = 0.08;
+
+                    positions[i3] = vertex.x * scale + (Math.random() - 0.5) * spread;
+                    positions[i3 + 1] = starCenterY + vertex.y * scale + (Math.random() - 0.5) * spread;
+                    positions[i3 + 2] = vertex.z * scale + (Math.random() - 0.5) * spread;
+
+                    // 顶点粒子更大更亮
+                    sizes[i] = 0.1 + Math.random() * 0.12;
+                } else if (genType < 0.9) {
+                    // 15%: 晶体核心发光
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    const r = Math.pow(Math.random(), 0.5) * 0.3 * scale;
+
+                    positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+                    positions[i3 + 1] = starCenterY + r * Math.cos(phi);
+                    positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+                    sizes[i] = 0.08 + Math.random() * 0.1;
+                } else {
+                    // 10%: 外围光晕（柔和的光芒）
+                    const theta = Math.random() * Math.PI * 2;
+                    const phi = Math.acos(2 * Math.random() - 1);
+                    const r = (1.0 + Math.random() * 0.5) * scale;
+
+                    positions[i3] = r * Math.sin(phi) * Math.cos(theta);
+                    positions[i3 + 1] = starCenterY + r * Math.cos(phi);
+                    positions[i3 + 2] = r * Math.sin(phi) * Math.sin(theta);
+
+                    sizes[i] = 0.04 + Math.random() * 0.04;
+                }
+
                 phases[i] = Math.random() * Math.PI * 2;
             }
 
@@ -1436,6 +1608,565 @@
             return points;
         }
 
+        // ============ 创建金币纹理 (西方风格金币) ============
+        function createGoldCoinTexture() {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const cx = size / 2;
+            const cy = size / 2;
+            const radius = size / 2 - 6;
+
+            // 清空画布
+            ctx.clearRect(0, 0, size, size);
+
+            // 金币外边缘 - 深金色边框
+            ctx.fillStyle = '#8B6914';
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 金币主体 - 实体金色渐变（模拟3D凸起效果）
+            const coinGradient = ctx.createRadialGradient(
+                cx - radius * 0.3, cy - radius * 0.3, 0,
+                cx, cy, radius
+            );
+            coinGradient.addColorStop(0, '#FFF8DC');    // 中心高亮
+            coinGradient.addColorStop(0.2, '#FFD700');  // 亮金色
+            coinGradient.addColorStop(0.5, '#DAA520');  // 金色
+            coinGradient.addColorStop(0.8, '#B8860B');  // 暗金色
+            coinGradient.addColorStop(1, '#8B6914');    // 边缘深色
+
+            ctx.fillStyle = coinGradient;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius - 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            // 锯齿边缘效果（金币边缘的凹槽）
+            ctx.strokeStyle = '#8B6914';
+            ctx.lineWidth = 2;
+            const teethCount = 32;
+            for (let i = 0; i < teethCount; i++) {
+                const angle = (i / teethCount) * Math.PI * 2;
+                const innerR = radius - 5;
+                const outerR = radius - 2;
+                ctx.beginPath();
+                ctx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+                ctx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+                ctx.stroke();
+            }
+
+            // 内圈边框
+            ctx.strokeStyle = '#996515';
+            ctx.lineWidth = 2.5;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius * 0.72, 0, Math.PI * 2);
+            ctx.stroke();
+
+            // 中心皇冠图案
+            ctx.fillStyle = '#8B6914';
+            ctx.strokeStyle = '#8B6914';
+            ctx.lineWidth = 2;
+
+            // 皇冠底座
+            const crownW = radius * 0.5;
+            const crownH = radius * 0.35;
+            const crownY = cy - crownH * 0.3;
+
+            ctx.beginPath();
+            ctx.moveTo(cx - crownW / 2, crownY + crownH * 0.4);
+            ctx.lineTo(cx + crownW / 2, crownY + crownH * 0.4);
+            ctx.lineTo(cx + crownW * 0.4, crownY + crownH);
+            ctx.lineTo(cx - crownW * 0.4, crownY + crownH);
+            ctx.closePath();
+            ctx.fill();
+
+            // 皇冠尖角
+            ctx.beginPath();
+            ctx.moveTo(cx - crownW / 2, crownY + crownH * 0.4);
+            ctx.lineTo(cx - crownW * 0.35, crownY - crownH * 0.2);
+            ctx.lineTo(cx - crownW * 0.15, crownY + crownH * 0.2);
+            ctx.lineTo(cx, crownY - crownH * 0.4);
+            ctx.lineTo(cx + crownW * 0.15, crownY + crownH * 0.2);
+            ctx.lineTo(cx + crownW * 0.35, crownY - crownH * 0.2);
+            ctx.lineTo(cx + crownW / 2, crownY + crownH * 0.4);
+            ctx.fill();
+
+            // 皇冠顶部小圆珠
+            ctx.fillStyle = '#DAA520';
+            const pearlPositions = [
+                { x: cx - crownW * 0.35, y: crownY - crownH * 0.25 },
+                { x: cx, y: crownY - crownH * 0.45 },
+                { x: cx + crownW * 0.35, y: crownY - crownH * 0.25 }
+            ];
+            pearlPositions.forEach(pos => {
+                ctx.beginPath();
+                ctx.arc(pos.x, pos.y, 3, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // 高光效果（左上角）
+            const highlightGradient = ctx.createRadialGradient(
+                cx - radius * 0.35, cy - radius * 0.35, 0,
+                cx - radius * 0.35, cy - radius * 0.35, radius * 0.55
+            );
+            highlightGradient.addColorStop(0, 'rgba(255, 255, 255, 0.45)');
+            highlightGradient.addColorStop(0.4, 'rgba(255, 255, 255, 0.15)');
+            highlightGradient.addColorStop(1, 'rgba(255, 255, 255, 0)');
+            ctx.fillStyle = highlightGradient;
+            ctx.beginPath();
+            ctx.arc(cx, cy, radius - 2, 0, Math.PI * 2);
+            ctx.fill();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+            return texture;
+        }
+
+        // ============ 创建桃心纹理 ============
+        function createHeartTexture() {
+            const size = 128;
+            const canvas = document.createElement('canvas');
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+
+            const cx = size / 2;
+            const cy = size / 2;
+            const heartSize = size * 0.5;
+
+            // 清空画布
+            ctx.clearRect(0, 0, size, size);
+
+            // ============ 1. 绘制基础形状 (更瘦长、饱满的心形) ============
+            ctx.beginPath();
+            // 调整关键点位置：更窄的宽度，更长的尾巴
+            const topY = cy - heartSize * 0.4;
+            const bottomTipY = cy + heartSize * 0.95; // 更长的尾巴
+            const widthFactor = 1.15; // 宽度系数减小 (原来约1.4)，解决"太扁"的问题
+
+            ctx.moveTo(cx, bottomTipY);
+
+            // 左半边
+            ctx.bezierCurveTo(
+                cx - heartSize * widthFactor, cy + heartSize * 0.1,  // 侧边鼓起
+                cx - heartSize * widthFactor, topY - heartSize * 0.5, // 顶部圆弧
+                cx, topY + heartSize * 0.15 // 顶部凹陷
+            );
+
+            // 右半边
+            ctx.bezierCurveTo(
+                cx + heartSize * widthFactor, topY - heartSize * 0.5, // 顶部圆弧
+                cx + heartSize * widthFactor, cy + heartSize * 0.1,   // 侧边鼓起
+                cx, bottomTipY
+            );
+            ctx.closePath();
+
+            // ============ 2. 主体填色 (保持红宝石质感) ============
+            const mainGradient = ctx.createRadialGradient(
+                cx + heartSize * 0.2, cy - heartSize * 0.3, heartSize * 0.1,
+                cx, cy, heartSize * 1.3
+            );
+            mainGradient.addColorStop(0, '#FF4D6A');   // 亮部
+            mainGradient.addColorStop(0.3, '#E60026'); // 中部
+            mainGradient.addColorStop(0.7, '#A8001C'); // 暗部
+            mainGradient.addColorStop(1, '#59000F');   // 边缘
+
+            ctx.fillStyle = mainGradient;
+            ctx.fill();
+
+            // ============ 3. 内边缘发光 ============
+            ctx.save();
+            ctx.strokeStyle = 'rgba(255, 120, 140, 0.3)';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+            ctx.restore();
+
+            // ============ 4. 高光调整 (适配新形状) ============
+
+            // 左上大高光 (更瘦长)
+            ctx.globalCompositeOperation = 'source-over';
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.25)';
+            ctx.beginPath();
+            ctx.ellipse(
+                cx - heartSize * 0.45, cy - heartSize * 0.45,
+                heartSize * 0.22, heartSize * 0.12,
+                Math.PI / 4, 0, Math.PI * 2
+            );
+            ctx.fill();
+
+            // 左上锐利高光
+            ctx.fillStyle = 'rgba(255, 255, 255, 0.95)';
+            ctx.beginPath();
+            ctx.ellipse(
+                cx - heartSize * 0.5, cy - heartSize * 0.5,
+                heartSize * 0.05, heartSize * 0.04,
+                Math.PI / 4, 0, Math.PI * 2
+            );
+            ctx.fill();
+
+            // 右上辅助高光
+            ctx.fillStyle = 'rgba(255, 200, 210, 0.15)';
+            ctx.beginPath();
+            ctx.ellipse(
+                cx + heartSize * 0.35, cy - heartSize * 0.5,
+                heartSize * 0.15, heartSize * 0.08,
+                -Math.PI / 5, 0, Math.PI * 2
+            );
+            ctx.fill();
+
+            // 底部反光
+            ctx.fillStyle = 'rgba(255, 180, 180, 0.3)';
+            ctx.beginPath();
+            ctx.ellipse(
+                cx, cy + heartSize * 0.65,
+                heartSize * 0.3, heartSize * 0.12,
+                0, Math.PI, Math.PI * 2
+            );
+            ctx.fill();
+
+            const texture = new THREE.CanvasTexture(canvas);
+            texture.needsUpdate = true;
+
+            return texture;
+        }
+
+        // ============ 创建螺旋桃心装饰（带跳动效果）============
+        function createSpiralHearts(config) {
+            const {
+                spiralCount = 4,
+                startHeight = -2.0,
+                endHeight = 6.0,
+                radiusOffset = 0.4,
+                phaseOffset = 0,
+                elementCount = 80,
+                elementSize = 0.7,
+                heartTexture = null
+            } = config;
+
+            const positions = new Float32Array(elementCount * 3);
+            const sizes = new Float32Array(elementCount);
+            const phases = new Float32Array(elementCount);
+
+            const treeBaseY = -2.5;
+            const treeTopY = 6.5;
+            const treeHeight = treeTopY - treeBaseY;
+            const baseRadius = 3.5;
+
+            for (let i = 0; i < elementCount; i++) {
+                const i3 = i * 3;
+                const t = i / (elementCount - 1);
+                const y = startHeight + t * (endHeight - startHeight);
+                const h = (y - treeBaseY) / treeHeight;
+                const hClamped = Math.max(0, Math.min(1, h));
+                const treeRadius = baseRadius * (1 - hClamped * 0.95);
+                const angle = phaseOffset + t * spiralCount * Math.PI * 2;
+                const finalRadius = treeRadius + radiusOffset;
+
+                positions[i3] = Math.cos(angle) * finalRadius;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = Math.sin(angle) * finalRadius;
+
+                sizes[i] = elementSize * (0.85 + Math.random() * 0.3);
+                phases[i] = Math.random() * Math.PI * 2;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+
+            // 从配置读取跳动参数
+            const beatSpeed = appConfig.ornament?.heartBeatSpeed || 1.5;
+            const beatScale = appConfig.ornament?.heartBeatScale || 0.15;
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() },
+                    heartTexture: { value: heartTexture },
+                    beatSpeed: { value: beatSpeed },
+                    beatScale: { value: beatScale }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute float phase;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    uniform float beatSpeed;
+                    uniform float beatScale;
+                    varying float vAlpha;
+                    
+                    void main() {
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        
+                        // 心跳效果：周期性放大缩小
+                        float beat = sin(time * beatSpeed * 3.14159 + phase) * 0.5 + 0.5;
+                        float scale = 1.0 + beat * beatScale;
+                        
+                        vAlpha = 0.9 + beat * 0.1;
+                        
+                        gl_PointSize = size * scale * pixelRatio * 280.0 / -mvPosition.z;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    uniform sampler2D heartTexture;
+                    varying float vAlpha;
+                    
+                    void main() {
+                        // 翻转Y坐标
+                        vec2 uv = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
+                        vec4 texColor = texture2D(heartTexture, uv);
+                        
+                        if (texColor.a < 0.1) discard;
+                        
+                        gl_FragColor = vec4(texColor.rgb, texColor.a * vAlpha);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.NormalBlending,
+                depthWrite: true,
+                depthTest: true
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // ============ 创建螺旋金币装饰 ============
+        function createSpiralCoins(config) {
+            const {
+                spiralCount = 4,           // 环绕圈数
+                startHeight = -2.0,        // 起始高度
+                endHeight = 6.0,           // 结束高度
+                radiusOffset = 0.4,        // 相对树表面的偏移
+                phaseOffset = 0,           // 相位偏移（弧度）
+                elementCount = 80,         // 元素数量
+                elementSize = 1,         // 元素大小（增大以显示纹理细节）
+                coinTexture = null         // 纹理
+            } = config;
+
+            const positions = new Float32Array(elementCount * 3);
+            const sizes = new Float32Array(elementCount);
+            const phases = new Float32Array(elementCount);  // 用于闪烁
+
+            // 树的几何参数（从createTreeParticles分析得出）
+            const treeBaseY = -2.5;
+            const treeTopY = 6.5;
+            const treeHeight = treeTopY - treeBaseY;  // 9
+            const baseRadius = 3.5;
+
+            for (let i = 0; i < elementCount; i++) {
+                const i3 = i * 3;
+
+                // t 从 0 到 1，代表沿螺旋路径的进度
+                const t = i / (elementCount - 1);
+
+                // 计算高度
+                const y = startHeight + t * (endHeight - startHeight);
+
+                // 根据高度计算树在该位置的半径
+                // h 是归一化高度 (0=底部, 1=顶部)
+                const h = (y - treeBaseY) / treeHeight;
+                const hClamped = Math.max(0, Math.min(1, h));
+                const treeRadius = baseRadius * (1 - hClamped * 0.95);
+
+                // 螺旋角度
+                const angle = phaseOffset + t * spiralCount * Math.PI * 2;
+
+                // 最终半径 = 树半径 + 偏移
+                const finalRadius = treeRadius + radiusOffset;
+
+                // 计算位置
+                positions[i3] = Math.cos(angle) * finalRadius;
+                positions[i3 + 1] = y;
+                positions[i3 + 2] = Math.sin(angle) * finalRadius;
+
+                // 大小有轻微变化
+                sizes[i] = elementSize * (0.85 + Math.random() * 0.3);
+
+                // 随机相位用于闪烁
+                phases[i] = Math.random() * Math.PI * 2;
+            }
+
+            const geometry = new THREE.BufferGeometry();
+            geometry.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+            geometry.setAttribute('size', new THREE.BufferAttribute(sizes, 1));
+            geometry.setAttribute('phase', new THREE.BufferAttribute(phases, 1));
+
+            const material = new THREE.ShaderMaterial({
+                uniforms: {
+                    time: { value: 0 },
+                    pixelRatio: { value: renderer.getPixelRatio() },
+                    coinTexture: { value: coinTexture }
+                },
+                vertexShader: `
+                    attribute float size;
+                    attribute float phase;
+                    uniform float time;
+                    uniform float pixelRatio;
+                    varying float vAlpha;
+                    varying float vBrightness;
+                    
+                    // 伪随机函数
+                    float rand(float n) {
+                        return fract(sin(n * 12.9898) * 43758.5453);
+                    }
+                    
+                    void main() {
+                        vec4 mvPosition = modelViewMatrix * vec4(position, 1.0);
+                        
+                        // 闪烁效果：多层随机 + 呼吸
+                        float t = time + phase * 100.0;
+                        float r1 = rand(floor(t * 1.5 + phase * 13.0));
+                        float r2 = rand(floor(t * 4.0 + phase * 23.0));
+                        float breathe = sin(t * 0.8 + phase) * 0.5 + 0.5;
+                        float sparkle = step(0.92, r2);  // 8%概率突然更亮
+                        
+                        vBrightness = 0.7 + 0.2 * r1 + 0.15 * breathe + 0.4 * sparkle;
+                        vAlpha = 0.85 + 0.15 * breathe;
+                        
+                        gl_PointSize = size * pixelRatio * 280.0 / -mvPosition.z;
+                        gl_Position = projectionMatrix * mvPosition;
+                    }
+                `,
+                fragmentShader: `
+                    uniform sampler2D coinTexture;
+                    varying float vAlpha;
+                    varying float vBrightness;
+                    
+                    void main() {
+                        // 翻转Y坐标使图案正向
+                        vec2 uv = vec2(gl_PointCoord.x, 1.0 - gl_PointCoord.y);
+                        vec4 texColor = texture2D(coinTexture, uv);
+                        
+                        // 丢弃透明像素
+                        if (texColor.a < 0.1) discard;
+                        
+                        // 应用亮度调制（闪闪发光效果）
+                        vec3 finalColor = texColor.rgb * vBrightness;
+                        
+                        // 闪光时添加白色高光
+                        finalColor = mix(finalColor, vec3(1.0, 0.95, 0.7), (vBrightness - 1.0) * 0.5);
+                        
+                        gl_FragColor = vec4(finalColor, texColor.a);
+                    }
+                `,
+                transparent: true,
+                blending: THREE.NormalBlending,
+                depthWrite: true,
+                depthTest: true
+            });
+
+            return new THREE.Points(geometry, material);
+        }
+
+        // 创建金币纹理（从隐藏的img标签加载，带异步等待）
+        let goldCoinTexture = createGoldCoinTexture();  // 先用Canvas备用
+        let heartTexture = createHeartTexture();  // 桃心纹理
+        let spiralOrnamentMeshes = [];
+
+        // 创建螺旋装饰带配置
+        const spiralOrnamentGroup = new THREE.Group();
+        const spiralConfigs = [
+            { phaseOffset: 0, spiralCount: 3.5, elementCount: 70 },
+            { phaseOffset: Math.PI / 2, spiralCount: 3.5, elementCount: 70 },
+            { phaseOffset: Math.PI, spiralCount: 3.5, elementCount: 70 },
+            { phaseOffset: Math.PI * 3 / 2, spiralCount: 3.5, elementCount: 70 }
+        ];
+
+        // 初始化装饰物（根据配置选择类型）
+        function initSpiralOrnaments() {
+            const ornamentConfig = appConfig.ornament || { enabled: true, type: 'coin' };
+
+            // 清空旧的
+            while (spiralOrnamentGroup.children.length > 0) {
+                spiralOrnamentGroup.remove(spiralOrnamentGroup.children[0]);
+            }
+            spiralOrnamentMeshes = [];
+
+            // 如果禁用则不创建
+            if (!ornamentConfig.enabled) {
+                console.log('🎄 装饰物已禁用');
+                return;
+            }
+
+            const ornamentType = ornamentConfig.type || 'coin';
+            console.log(`🎄 初始化装饰物: ${ornamentType}`);
+
+            spiralOrnamentMeshes = spiralConfigs.map(cfg => {
+                let ornament;
+                if (ornamentType === 'heart') {
+                    ornament = createSpiralHearts({
+                        ...cfg,
+                        startHeight: -1.8,
+                        endHeight: 5.8,
+                        radiusOffset: 0.2,
+                        elementSize: 1.1, // Reduced for balance
+                        heartTexture: heartTexture
+                    });
+                } else {
+                    // 默认金币
+                    ornament = createSpiralCoins({
+                        ...cfg,
+                        startHeight: -1.8,
+                        endHeight: 5.8,
+                        radiusOffset: 0.2,
+                        elementSize: 0.85,
+                        coinTexture: goldCoinTexture
+                    });
+                }
+                spiralOrnamentGroup.add(ornament);
+                return ornament;
+            });
+        }
+
+        // 兼容旧的函数名
+        function initSpiralCoins(texture) {
+            goldCoinTexture = texture;
+            if (appConfig.ornament?.type === 'coin') {
+                initSpiralOrnaments();
+            }
+        }
+
+        // 先初始化装饰物
+        initSpiralOrnaments();
+
+        // 暴露到全局（供按钮调用）
+        window.initSpiralOrnaments = initSpiralOrnaments;
+
+        // 异步加载PNG纹理
+        function loadPNGTexture() {
+            const img = document.getElementById('coin-texture-img');
+            if (!img) {
+                console.warn('⚠️ 找不到img标签，使用Canvas纹理');
+                return;
+            }
+
+            function onImgLoad() {
+                console.log('✅ PNG金币纹理加载成功，尺寸:', img.naturalWidth, 'x', img.naturalHeight);
+                goldCoinTexture = new THREE.Texture(img);
+                goldCoinTexture.needsUpdate = true;
+                // 如果当前是金币模式，重新创建
+                if (appConfig.ornament?.type === 'coin' || !appConfig.ornament?.type) {
+                    initSpiralOrnaments();
+                }
+            }
+
+            if (img.complete && img.naturalWidth > 0) {
+                onImgLoad();
+            } else {
+                img.onload = onImgLoad;
+                img.onerror = () => console.warn('❌ PNG加载失败，保持Canvas纹理');
+            }
+        }
+
+        // 尝试加载PNG
+        setTimeout(loadPNGTexture, 100);
+
         // ============ 添加到场景 ============
         const treeParticles = createTreeParticles();
         const groundParticles = createGroundParticles();
@@ -1450,6 +2181,7 @@
         scene.add(treeParticles);
         scene.add(topStar);
         scene.add(twinklingLights);  // 闪烁灯串
+        scene.add(spiralOrnamentGroup);  // 螺旋装饰物（金币或桃心）
 
         // 雪花添加到摄像头上，使其始终在摄像头前方，不受视角旋转影响
         camera.add(floatingSnow);
@@ -1537,6 +2269,7 @@
             stars.material.uniforms.time.value = time;
             topStar.material.uniforms.time.value = time;
             twinklingLights.material.uniforms.time.value = time;  // 闪烁灯串
+            spiralOrnamentMeshes.forEach(mesh => mesh.material.uniforms.time.value = time);  // 螺旋装饰物
 
             // 更新调试信息
             const debugEl = document.getElementById('debug-info');
@@ -2065,6 +2798,9 @@
 </head>
 
 <body>
+    <!-- 隐藏的图片资源（用于纹理加载，绕过CORS限制） -->
+    <img id="coin-texture-img" src="png/g1.png" style="display:none" crossorigin="anonymous">
+
     <div id="container"></div>
     <div class="text-overlay hidden">
         <!-- Content will be populated by JS now -->
@@ -2191,7 +2927,7 @@
 
             <div class="btn-group" style="margin-top:10px;">
                 <button onclick="replayAnimation()" class="btn btn-primary">▶ 重播动画</button>
-                <button onclick="saveAnimationToLocal()" class="btn btn-action">写入Local</button>
+                <button onclick="saveAnimationToLocal()" class="btn btn-action">💾 保存配置</button>
             </div>
         </div>
 
@@ -2200,6 +2936,38 @@
             <div class="hint-text">按 <kbd>R</kbd> 录制 / <kbd>P</kbd> 回放</div>
             <div id="record-status" style="color:#f00; margin-top:5px; height:18px;"></div>
         </div>
+
+        <div class="panel-section">
+            <div class="section-title">🎄 树上装饰物</div>
+            <div class="control-group">
+                <label>显示:</label>
+                <input type="checkbox" id="ornament-enabled" checked onchange="onOrnamentConfigChange()">
+            </div>
+            <div class="control-group">
+                <label>类型:</label>
+                <select id="ornament-type" onchange="onOrnamentConfigChange()">
+                    <option value="coin">💰 金币</option>
+                    <option value="heart">❤️ 桃心</option>
+                </select>
+            </div>
+            <div id="heart-options" style="display:none;">
+                <div class="control-group">
+                    <label>跳动速度:</label>
+                    <input type="number" id="heart-beat-speed" step="0.1" min="0.5" max="5" value="1.5"
+                        onchange="onOrnamentConfigChange()">
+                </div>
+                <div class="control-group">
+                    <label>跳动幅度:</label>
+                    <input type="number" id="heart-beat-scale" step="0.05" min="0" max="0.5" value="0.15"
+                        onchange="onOrnamentConfigChange()">
+                </div>
+            </div>
+            <div class="btn-group" style="margin-top:10px;">
+                <button onclick="applyOrnamentConfig()" class="btn btn-action">✨ 应用装饰</button>
+                <button onclick="saveOrnamentToLocal()" class="btn btn-action">💾 保存配置</button>
+            </div>
+        </div>
+
         <div class="panel-section">
             <div class="section-title">📝 文字配置</div>
 
@@ -2246,7 +3014,7 @@
 
             <div class="btn-group" style="margin-top:15px;">
                 <button onclick="applyTextConfig()" class="btn btn-action">✏️ 应用文字</button>
-                <button onclick="saveTextToLocal()" class="btn btn-action">保存Local</button>
+                <button onclick="saveTextToLocal()" class="btn btn-action">💾 保存配置</button>
             </div>
         </div>
     </div>
