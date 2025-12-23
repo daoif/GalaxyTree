@@ -76,36 +76,57 @@
 
         const configManager = {
             // 加载配置：LocalStorage > Default
+            // 加载配置：External JSON > LocalStorage > Default
             load: function () {
-                try {
-                    const saved = localStorage.getItem('galaxy_tree_config');
-                    if (saved) {
-                        const parsed = JSON.parse(saved);
-                        // 简单合并（实际项目中可能需要深度合并）
-                        appConfig = { ...DEFAULT_CONFIG, ...parsed };
+                // 1. 尝试从服务器获取外部配置 (允许用户分发配置文件)
+                fetch('config.json')
+                    .then(response => {
+                        if (response.ok) return response.json();
+                        throw new Error('No external config');
+                    })
+                    .then(externalConfig => {
+                        console.log('📂 发现外部配置文件 (config.json)，已加载！');
+                        // 外部配置优先级最高，覆盖 Default
+                        appConfig = { ...DEFAULT_CONFIG, ...externalConfig };
 
-                        // 深度合并 animation 和 text，防止部分丢失
-                        if (parsed.animation) {
-                            appConfig.animation = { ...DEFAULT_CONFIG.animation, ...parsed.animation };
-                            // 恢复录像数据
-                            if (parsed.animation.recordedFrames && Array.isArray(parsed.animation.recordedFrames)) {
-                                recordedFrames = parsed.animation.recordedFrames;
-                                console.log(`✅ 恢复了 ${recordedFrames.length} 帧录像数据`);
+                        // 深度合并
+                        if (externalConfig.animation) appConfig.animation = { ...DEFAULT_CONFIG.animation, ...externalConfig.animation };
+                        if (externalConfig.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...externalConfig.text };
+                        if (externalConfig.ornament) appConfig.ornament = { ...DEFAULT_CONFIG.ornament, ...externalConfig.ornament };
+
+                        // 应用配置
+                        initDebugPanel();
+                        applyTextConfig();
+                        if (window.initSpiralOrnaments) window.initSpiralOrnaments();
+                    })
+                    .catch(() => {
+                        // 2. 如果没有外部文件，则读取 LocalStorage
+                        try {
+                            const saved = localStorage.getItem('galaxy_tree_config');
+                            if (saved) {
+                                const parsed = JSON.parse(saved);
+                                appConfig = { ...DEFAULT_CONFIG, ...parsed };
+
+                                if (parsed.animation) {
+                                    appConfig.animation = { ...DEFAULT_CONFIG.animation, ...parsed.animation };
+                                    if (parsed.animation.recordedFrames) recordedFrames = parsed.animation.recordedFrames;
+                                }
+                                if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text };
+                                if (parsed.ornament) appConfig.ornament = { ...DEFAULT_CONFIG.ornament, ...parsed.ornament };
+
+                                console.log('✅ 配置已从 LocalStorage 加载');
+                            } else {
+                                console.log('ℹ️ 未找到本地配置，使用默认值');
                             }
+                            // 无论如何都要初始化面板
+                            initDebugPanel();
+                            applyTextConfig();
+                        } catch (e) {
+                            console.error('配置加载失败，已自动恢复默认', e);
+                            appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                            initDebugPanel();
                         }
-                        if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text };
-                        if (parsed.ornament) appConfig.ornament = { ...DEFAULT_CONFIG.ornament, ...parsed.ornament };
-
-                        console.log('✅ 配置已从 LocalStorage 加载');
-                    } else {
-                        console.log('ℹ️ 未找到本地配置，使用默认值');
-                    }
-                } catch (e) {
-                    console.error('配置加载失败，已自动恢复默认', e);
-                    // 静默恢复默认值，不弹窗
-                    appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
-                    recordedFrames = [];
-                }
+                    });
             },
 
             // 导出 JSON
@@ -3017,26 +3038,24 @@
                 <button onclick="saveTextToLocal()" class="btn btn-action">💾 保存配置</button>
             </div>
         </div>
-    </div>
-
-    <div class="panel-section">
-        <div class="section-title">ℹ️ 关于作者</div>
-        <div class="control-group" style="margin-bottom: 5px;">
-            <label style="width: 60px;">交流群:</label>
-            <!-- 链接到 QQ 加群 (如果用户有安装 QQ) -->
-            <a href="tencent://groupwpa/?subcmd=all&param=7B2267726F7570556964223A3939333937353334397D"
-                style="color: #4da6ff; text-decoration: none; align-self: center;">
-                993975349
-            </a>
+        <div class="panel-section">
+            <div class="section-title">ℹ️ 关于作者</div>
+            <div class="control-group" style="margin-bottom: 5px;">
+                <label style="width: 60px;">QQ交流群:</label>
+                <!-- 链接到 QQ 加群 (如果用户有安装 QQ) -->
+                <a href="tencent://groupwpa/?subcmd=all&param=7B2267726F7570556964223A3939333937353334397D"
+                    style="color: #4da6ff; text-decoration: none; align-self: center;">
+                    993975349
+                </a>
+            </div>
+            <div class="control-group">
+                <label style="width: 60px;">GitHub:</label>
+                <a href="https://github.com/daoif/GalaxyTree" target="_blank"
+                    style="color: #4da6ff; text-decoration: none; align-self: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
+                    GalaxyTree Repo
+                </a>
+            </div>
         </div>
-        <div class="control-group">
-            <label style="width: 60px;">GitHub:</label>
-            <a href="https://github.com/YourUsername/GalaxyTree" target="_blank"
-                style="color: #4da6ff; text-decoration: none; align-self: center; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 180px;">
-                GalaxyTree Repo
-            </a>
-        </div>
-    </div>
     </div>
 
 

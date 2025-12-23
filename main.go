@@ -6,6 +6,7 @@ import (
 	"io/fs"
 	"net"
 	"net/http"
+	"os"
 	"os/exec"
 	"runtime"
 )
@@ -23,7 +24,20 @@ func main() {
 	port := listener.Addr().(*net.TCPAddr).Port
 	listener.Close()
 
-	// 创建文件服务器
+	// 1. 优先处理外部配置文件请求 (允许用户分发 galaxy_tree_config.json)
+	http.HandleFunc("/config.json", func(w http.ResponseWriter, r *http.Request) {
+		// 尝试读取运行目录下的 json
+		data, err := os.ReadFile("galaxy_tree_config.json")
+		if err == nil {
+			w.Header().Set("Content-Type", "application/json")
+			w.Write(data)
+			return
+		}
+		// 找不到则返回 404 (前端会处理)
+		http.NotFound(w, r)
+	})
+
+	// 2. 创建文件服务器 (Embed FS)
 	http.Handle("/", http.FileServer(http.FS(content)))
 
 	// 启动服务器
