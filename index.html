@@ -161,8 +161,7 @@
 <body>
     <div id="container"></div>
     <div class="text-overlay hidden">
-        <h1>Merry Christmas</h1>
-        <p>我爱你，宝贝</p>
+        <!-- Content will be populated by JS now -->
     </div>
 
     <!-- 开场覆盖层 -->
@@ -188,6 +187,30 @@
         width: 280px;
     ">
         <div id="camera-info"></div>
+        <hr style="border-color:#333; margin:10px 0;">
+
+        <b>💾 配置管理</b><br>
+        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
+            <button onclick="configManager.save()"
+                style="flex:1; padding:6px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                保存(Local)
+            </button>
+            <button onclick="configManager.reset()"
+                style="flex:1; padding:6px; background:#a33; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+                重置
+            </button>
+        </div>
+        <div style="margin-top:5px; display:flex; gap:5px; flex-wrap:wrap;">
+            <button onclick="configManager.export()"
+                style="flex:1; padding:6px; background:#333; color:#0f0; border:1px solid #444; border-radius:4px; cursor:pointer;">
+                导出JSON
+            </button>
+            <label
+                style="flex:1; padding:6px; background:#333; color:#0f0; border:1px solid #444; border-radius:4px; cursor:pointer; text-align:center; display:inline-block;">
+                导入JSON
+                <input type="file" onchange="configManager.import(this)" style="display:none;" accept=".json">
+            </label>
+        </div>
         <hr style="border-color:#333; margin:10px 0;">
 
         <b>🎬 动画参数</b><br><br>
@@ -259,21 +282,21 @@
         <hr style="border-color:#333; margin:10px 0;">
         <b>📝 文字配置</b><br><br>
 
-        <label>位置 Left: <input type="text" id="text-left" value="8%"
+        <label>位置 Left: <input type="text" id="text-left"
                 style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br>
-        <label>位置 Top: <input type="text" id="text-top" value="38%"
+        <label>位置 Top: <input type="text" id="text-top"
                 style="width:50px; background:#222; color:#0f0; border:1px solid #444;"></label><br><br>
 
         <div id="text-lines-config">
             <div class="text-line-config" data-line="0">
                 <b style="color:#ff0;">行1:</b><br>
-                <input type="text" id="text-content-0" value="Merry Christmas"
+                <input type="text" id="text-content-0"
                     style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
-                <label style="font-size:11px;">字号: <input type="text" id="text-size-0" value="clamp(32px, 5vw, 56px)"
+                <label style="font-size:11px;">字号: <input type="text" id="text-size-0"
                         style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">颜色: <input type="text" id="text-color-0" value="rgba(255,255,255,0.9)"
+                <label style="font-size:11px;">颜色: <input type="text" id="text-color-0"
                         style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-0" checked></label>
+                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-0"></label>
                 <label style="font-size:11px; margin-left:10px;">字体:
                     <select id="text-font-0"
                         style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
@@ -284,34 +307,43 @@
                 </label>
             </div>
             <br>
-            <div class="text-line-config" data-line="1">
-                <b style="color:#ff0;">行2:</b><br>
-                <input type="text" id="text-content-1" value="我爱你，宝贝"
-                    style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
-                <label style="font-size:11px;">字号: <input type="text" id="text-size-1" value="clamp(20px, 3vw, 32px)"
-                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">颜色: <input type="text" id="text-color-1" value="rgba(255,210,225,0.85)"
-                        style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
-                <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-1"></label>
-                <label style="font-size:11px; margin-left:10px;">字体:
-                    <select id="text-font-1"
-                        style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
-                        <option value="serif">衬线体</option>
-                        <option value="sans-serif">无衬线</option>
-                        <option value="KaiTi" selected>楷体</option>
-                    </select>
-                </label>
-            </div>
+            <label style="font-size:11px; margin-left:10px;">字体:
+                <select id="text-font-0" style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
+                    <option value="serif">衬线体</option>
+                    <option value="sans-serif">无衬线</option>
+                    <option value="KaiTi">楷体</option>
+                </select>
+            </label>
         </div>
         <br>
-        <button onclick="applyTextConfig()"
-            style="padding:6px 12px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
-            ✏️ 应用文字
-        </button>
-        <button onclick="printTextConfig()"
-            style="padding:6px 10px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
-            📋
-        </button>
+        <div class="text-line-config" data-line="1">
+            <b style="color:#ff0;">行2:</b><br>
+            <input type="text" id="text-content-1"
+                style="width:150px; background:#222; color:#0f0; border:1px solid #444;"><br>
+            <label style="font-size:11px;">字号: <input type="text" id="text-size-1"
+                    style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+            <label style="font-size:11px;">颜色: <input type="text" id="text-color-1"
+                    style="width:100px; background:#222; color:#888; border:1px solid #333;"></label><br>
+            <label style="font-size:11px;">斜体: <input type="checkbox" id="text-italic-1"></label>
+            <label style="font-size:11px; margin-left:10px;">字体:
+                <select id="text-font-1" style="background:#222; color:#888; border:1px solid #333; font-size:10px;">
+                    <option value="serif">衬线体</option>
+                    <option value="sans-serif">无衬线</option>
+                    <option value="KaiTi">楷体</option>
+                </select>
+            </label>
+        </div>
+    </div>
+    </div>
+    <br>
+    <button onclick="applyTextConfig()"
+        style="padding:6px 12px; background:#06a; color:#fff; border:none; border-radius:4px; cursor:pointer;">
+        ✏️ 应用文字
+    </button>
+    <button onclick="printTextConfig()"
+        style="padding:6px 10px; background:#333; color:#0f0; border:1px solid #0f0; border-radius:4px; cursor:pointer; margin-left:5px;">
+        📋
+    </button>
     </div>
 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
@@ -321,9 +353,144 @@
         const container = document.getElementById('container');
         const scene = new THREE.Scene();
 
+        // ============ 配置管理系统 ============
+        const DEFAULT_CONFIG = {
+            animation: {
+                startX: -1.7, startY: 14.4, startZ: -2.2,
+                endX: -6.4, endY: 4.4, endZ: 10.7,
+                targetStartX: 0, targetStartY: 6, targetStartZ: 0,
+                targetEndX: 0, targetEndY: 2, targetEndZ: 0,
+                duration: 2.5,
+                easing: 'easeOut'
+            },
+            text: {
+                left: '8%',
+                top: '38%',
+                lines: [
+                    {
+                        content: 'Merry Christmas',
+                        fontSize: 'clamp(32px, 5vw, 56px)',
+                        color: 'rgba(255,255,255,0.9)',
+                        italic: true,
+                        font: 'serif'
+                    },
+                    {
+                        content: '我爱你，宝贝',
+                        fontSize: 'clamp(20px, 3vw, 32px)',
+                        color: 'rgba(255,210,225,0.85)',
+                        italic: false,
+                        font: 'KaiTi'
+                    }
+                ]
+            }
+        };
+
+        // 当前配置
+        let appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+
+        const configManager = {
+            // 加载配置：LocalStorage > Default
+            load: function () {
+                try {
+                    const saved = localStorage.getItem('galaxy_tree_config');
+                    if (saved) {
+                        const parsed = JSON.parse(saved);
+                        // 简单合并（实际项目中可能需要深度合并）
+                        appConfig = { ...DEFAULT_CONFIG, ...parsed };
+                        // 深度合并 animation 和 text，防止部分丢失
+                        if (parsed.animation) appConfig.animation = { ...DEFAULT_CONFIG.animation, ...parsed.animation };
+                        if (parsed.text) appConfig.text = { ...DEFAULT_CONFIG.text, ...parsed.text }; // 注意：lines 数组会直接覆盖
+                        console.log('✅ 配置已从 LocalStorage 加载');
+                    } else {
+                        console.log('ℹ️ 未找到本地配置，使用默认值');
+                    }
+                } catch (e) {
+                    console.error('配置加载失败，重置为默认', e);
+                    this.reset();
+                }
+            },
+
+            // 保存配置到 LocalStorage
+            save: function () {
+                try {
+                    // 保存前先更新内存中的最新值
+                    readParamsFromPanel();
+                    // 这里不需要再次 applyTextConfig，因为输入框的值就是最新的
+                    // 但我们需要把输入框的值回写到 appConfig 才能保存
+                    updateAppConfigFromInputs();
+
+                    localStorage.setItem('galaxy_tree_config', JSON.stringify(appConfig));
+                    alert('✅ 配置已保存到本地！刷新后依然生效。');
+                } catch (e) {
+                    alert('❌ 保存失败: ' + e.message);
+                }
+            },
+
+            // 导出 JSON
+            export: function () {
+                updateAppConfigFromInputs(); // 确保导出的是当前面板上的值
+                const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(appConfig, null, 2));
+                const downloadAnchorNode = document.createElement('a');
+                downloadAnchorNode.setAttribute("href", dataStr);
+                downloadAnchorNode.setAttribute("download", "galaxy_tree_config.json");
+                document.body.appendChild(downloadAnchorNode);
+                downloadAnchorNode.click();
+                downloadAnchorNode.remove();
+            },
+
+            // 导入 JSON
+            import: function (inputElement) {
+                const file = inputElement.files[0];
+                if (!file) return;
+
+                const reader = new FileReader();
+                reader.onload = function (e) {
+                    try {
+                        const parsed = JSON.parse(e.target.result);
+                        // 基本校验
+                        if (!parsed.animation || !parsed.text) {
+                            throw new Error('JSON 格式不正确');
+                        }
+                        appConfig = parsed;
+                        localStorage.setItem('galaxy_tree_config', JSON.stringify(appConfig));
+
+                        // 刷新 UI
+                        initDebugPanel();
+                        applyTextConfig();
+
+                        // 如果需要，也可以重置摄像头位置
+                        // camera.position.set(appConfig.animation.startX, appConfig.animation.startY, appConfig.animation.startZ);
+
+                        alert('✅ 配置导入成功！');
+                    } catch (err) {
+                        alert('❌ 导入失败: ' + err.message);
+                    }
+                };
+                reader.readAsText(file);
+                // 清重 input，允许重复导入同一文件
+                inputElement.value = '';
+            },
+
+            // 重置
+            reset: function () {
+                if (confirm('确定要重置所有参数并清除本地缓存吗？')) {
+                    localStorage.removeItem('galaxy_tree_config');
+                    appConfig = JSON.parse(JSON.stringify(DEFAULT_CONFIG));
+                    initDebugPanel();
+                    applyTextConfig();
+                    // 可选：刷新页面
+                    // location.reload();
+                    alert('配置已重置 (如需看效果建议刷新页面)');
+                }
+            }
+        };
+
+        // 初始化加载
+        configManager.load();
+
         const camera = new THREE.PerspectiveCamera(60, window.innerWidth / window.innerHeight, 0.1, 2000);
-        // 初始位置: 俯视角度 (第一张截图)
-        camera.position.set(-1.7, 14.4, -2.2);
+        // 初始位置: 使用配置
+        camera.position.set(appConfig.animation.startX, appConfig.animation.startY, appConfig.animation.startZ);
 
         const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
         renderer.setSize(window.innerWidth, window.innerHeight);
@@ -338,7 +505,7 @@
         controls.enablePan = false;
         controls.minDistance = 5;
         controls.maxDistance = 50;
-        controls.target.set(0, 6, 0);  // 初始目标点（俯视时看向树顶）
+        controls.target.set(appConfig.animation.targetStartX, appConfig.animation.targetStartY, appConfig.animation.targetStartZ);  // 初始目标点
         controls.enabled = false;  // 动画完成前禁用
         controls.update();
 
@@ -346,16 +513,10 @@
         let cameraAnimating = false;
         let cameraAnimProgress = 0;
 
-        // 动画参数（可通过调试面板修改）
-        let animParams = {
-            startX: -1.7, startY: 14.4, startZ: -2.2,
-            endX: -6.4, endY: 4.4, endZ: 10.7,
-            // 目标点（旋转中心）
-            targetStartX: 0, targetStartY: 6, targetStartZ: 0,
-            targetEndX: 0, targetEndY: 2, targetEndZ: 0,
-            duration: 2.5,
-            easing: 'easeOut'
-        };
+        // 动画参数（引用 appConfig.animation）
+        // 为了兼容原有代码逻辑，这里可以做一个代理，或者直接修改下方代码使用 appConfig.animation
+        // 下面选择直接替换使用处，但为了减少改动，我们让 animParams 指向 appConfig.animation
+        let animParams = appConfig.animation;
 
         // 缓动函数集合
         const easingFunctions = {
@@ -388,44 +549,84 @@
             return easingFunctions[animParams.easing](t);
         }
 
-        // 初始化调试面板输入框
+        // 初始化调试面板输入框 (从 appConfig 填充)
         function initDebugPanel() {
-            document.getElementById('anim-start-x').value = animParams.startX;
-            document.getElementById('anim-start-y').value = animParams.startY;
-            document.getElementById('anim-start-z').value = animParams.startZ;
-            document.getElementById('anim-end-x').value = animParams.endX;
-            document.getElementById('anim-end-y').value = animParams.endY;
-            document.getElementById('anim-end-z').value = animParams.endZ;
+            const anim = appConfig.animation;
+            document.getElementById('anim-start-x').value = anim.startX;
+            document.getElementById('anim-start-y').value = anim.startY;
+            document.getElementById('anim-start-z').value = anim.startZ;
+            document.getElementById('anim-end-x').value = anim.endX;
+            document.getElementById('anim-end-y').value = anim.endY;
+            document.getElementById('anim-end-z').value = anim.endZ;
             // 目标点
-            document.getElementById('anim-target-start-x').value = animParams.targetStartX;
-            document.getElementById('anim-target-start-y').value = animParams.targetStartY;
-            document.getElementById('anim-target-start-z').value = animParams.targetStartZ;
-            document.getElementById('anim-target-end-x').value = animParams.targetEndX;
-            document.getElementById('anim-target-end-y').value = animParams.targetEndY;
-            document.getElementById('anim-target-end-z').value = animParams.targetEndZ;
+            document.getElementById('anim-target-start-x').value = anim.targetStartX;
+            document.getElementById('anim-target-start-y').value = anim.targetStartY;
+            document.getElementById('anim-target-start-z').value = anim.targetStartZ;
+            document.getElementById('anim-target-end-x').value = anim.targetEndX;
+            document.getElementById('anim-target-end-y').value = anim.targetEndY;
+            document.getElementById('anim-target-end-z').value = anim.targetEndZ;
 
-            document.getElementById('anim-duration').value = animParams.duration;
-            document.getElementById('anim-easing').value = animParams.easing;
+            document.getElementById('anim-duration').value = anim.duration;
+            document.getElementById('anim-easing').value = anim.easing;
+
+            // 初始化文字配置面板
+            const txt = appConfig.text;
+            document.getElementById('text-left').value = txt.left;
+            document.getElementById('text-top').value = txt.top;
+
+            for (let i = 0; i < 2; i++) {
+                const line = txt.lines[i] || { content: '', fontSize: '20px', color: 'white', italic: false, font: 'serif' };
+                document.getElementById(`text-content-${i}`).value = line.content;
+                document.getElementById(`text-size-${i}`).value = line.fontSize;
+                document.getElementById(`text-color-${i}`).value = line.color;
+                document.getElementById(`text-italic-${i}`).checked = line.italic;
+                document.getElementById(`text-font-${i}`).value = line.font;
+            }
+
+            // 立即应用文字配置显示出来
+            applyTextConfig();
         }
 
-        // 从面板读取参数
+        // 从面板读取参数到 appConfig.animation
         function readParamsFromPanel() {
-            animParams.startX = parseFloat(document.getElementById('anim-start-x').value);
-            animParams.startY = parseFloat(document.getElementById('anim-start-y').value);
-            animParams.startZ = parseFloat(document.getElementById('anim-start-z').value);
-            animParams.endX = parseFloat(document.getElementById('anim-end-x').value);
-            animParams.endY = parseFloat(document.getElementById('anim-end-y').value);
-            animParams.endZ = parseFloat(document.getElementById('anim-end-z').value);
+            const anim = appConfig.animation;
+            anim.startX = parseFloat(document.getElementById('anim-start-x').value);
+            anim.startY = parseFloat(document.getElementById('anim-start-y').value);
+            anim.startZ = parseFloat(document.getElementById('anim-start-z').value);
+            anim.endX = parseFloat(document.getElementById('anim-end-x').value);
+            anim.endY = parseFloat(document.getElementById('anim-end-y').value);
+            anim.endZ = parseFloat(document.getElementById('anim-end-z').value);
             // 目标点
-            animParams.targetStartX = parseFloat(document.getElementById('anim-target-start-x').value);
-            animParams.targetStartY = parseFloat(document.getElementById('anim-target-start-y').value);
-            animParams.targetStartZ = parseFloat(document.getElementById('anim-target-start-z').value);
-            animParams.targetEndX = parseFloat(document.getElementById('anim-target-end-x').value);
-            animParams.targetEndY = parseFloat(document.getElementById('anim-target-end-y').value);
-            animParams.targetEndZ = parseFloat(document.getElementById('anim-target-end-z').value);
+            anim.targetStartX = parseFloat(document.getElementById('anim-target-start-x').value);
+            anim.targetStartY = parseFloat(document.getElementById('anim-target-start-y').value);
+            anim.targetStartZ = parseFloat(document.getElementById('anim-target-start-z').value);
+            anim.targetEndX = parseFloat(document.getElementById('anim-target-end-x').value);
+            anim.targetEndY = parseFloat(document.getElementById('anim-target-end-y').value);
+            anim.targetEndZ = parseFloat(document.getElementById('anim-target-end-z').value);
 
-            animParams.duration = parseFloat(document.getElementById('anim-duration').value);
-            animParams.easing = document.getElementById('anim-easing').value;
+            anim.duration = parseFloat(document.getElementById('anim-duration').value);
+            anim.easing = document.getElementById('anim-easing').value;
+        }
+
+        // 把输入框的所有值（动画+文字）同步到 appConfig，用于保存
+        function updateAppConfigFromInputs() {
+            readParamsFromPanel(); // 更新动画部分
+
+            // 更新文字部分
+            const txt = appConfig.text;
+            txt.left = document.getElementById('text-left').value;
+            txt.top = document.getElementById('text-top').value;
+
+            txt.lines = [];
+            for (let i = 0; i < 2; i++) {
+                txt.lines.push({
+                    content: document.getElementById(`text-content-${i}`).value,
+                    fontSize: document.getElementById(`text-size-${i}`).value,
+                    color: document.getElementById(`text-color-${i}`).value,
+                    italic: document.getElementById(`text-italic-${i}`).checked,
+                    font: document.getElementById(`text-font-${i}`).value
+                });
+            }
         }
 
         // 设置起点为当前位置（摄像头+目标点）
@@ -556,70 +757,54 @@
         }, true);
 
         // ============ 文字配置功能 ============
+        // ============ 文字配置功能 ============
         function applyTextConfig() {
+            // 先同步到 Config，确保一致性
+            updateAppConfigFromInputs();
+            const txt = appConfig.text;
+
             const overlay = document.querySelector('.text-overlay');
 
             // 应用位置
-            overlay.style.left = document.getElementById('text-left').value;
-            overlay.style.top = document.getElementById('text-top').value;
+            overlay.style.left = txt.left;
+            overlay.style.top = txt.top;
 
             // 清空现有内容
             overlay.innerHTML = '';
 
             // 应用每行配置
-            for (let i = 0; i < 2; i++) {
-                const content = document.getElementById(`text-content-${i}`).value;
-                if (!content) continue;
-
-                const fontSize = document.getElementById(`text-size-${i}`).value;
-                const color = document.getElementById(`text-color-${i}`).value;
-                const italic = document.getElementById(`text-italic-${i}`).checked;
-                const font = document.getElementById(`text-font-${i}`).value;
+            txt.lines.forEach((line, i) => {
+                if (!line.content) return;
 
                 const el = document.createElement(i === 0 ? 'h1' : 'p');
-                el.textContent = content;
-                el.style.fontSize = fontSize;
-                el.style.color = color;
-                el.style.fontStyle = italic ? 'italic' : 'normal';
+                el.textContent = line.content;
+                el.style.fontSize = line.fontSize;
+                el.style.color = line.color;
+                el.style.fontStyle = line.italic ? 'italic' : 'normal';
                 el.style.fontWeight = 'normal';
                 el.style.margin = i === 0 ? '0 0 12px 0' : '0';
                 el.style.textShadow = '0 0 30px rgba(255,255,255,0.4), 0 0 60px rgba(255,200,220,0.2)';
                 el.style.animation = `float 4s ease-in-out infinite ${i * 0.5}s`;
 
                 // 字体
-                if (font === 'KaiTi') {
+                if (line.font === 'KaiTi') {
                     el.style.fontFamily = "'KaiTi', '楷体', 'STKaiti', serif";
-                } else if (font === 'sans-serif') {
+                } else if (line.font === 'sans-serif') {
                     el.style.fontFamily = "Arial, 'Helvetica Neue', sans-serif";
                 } else {
                     el.style.fontFamily = "'Times New Roman', Georgia, serif";
                 }
 
                 overlay.appendChild(el);
-            }
+            });
         }
 
         function printTextConfig() {
-            const config = {
-                left: document.getElementById('text-left').value,
-                top: document.getElementById('text-top').value,
-                lines: []
-            };
-
-            for (let i = 0; i < 2; i++) {
-                config.lines.push({
-                    content: document.getElementById(`text-content-${i}`).value,
-                    fontSize: document.getElementById(`text-size-${i}`).value,
-                    color: document.getElementById(`text-color-${i}`).value,
-                    italic: document.getElementById(`text-italic-${i}`).checked,
-                    font: document.getElementById(`text-font-${i}`).value
-                });
-            }
-
+            updateAppConfigFromInputs();
             console.log('=== 文字配置 ===');
-            console.log(JSON.stringify(config, null, 2));
+            console.log(JSON.stringify(appConfig.text, null, 2));
             console.log('================');
-            alert(`位置: left=${config.left}, top=${config.top}\n\n行1: ${config.lines[0].content}\n行2: ${config.lines[1].content}\n\n详细配置已输出到控制台 (F12)`);
+            alert(`配置已同步并输出。建议直接使用面板上方的“导出JSON”功能。`);
         }
 
         // 重播动画
@@ -669,7 +854,7 @@
             console.log(`时长: ${animParams.duration}秒`);
             console.log(`缓动: ${animParams.easing}`);
             console.log('================');
-            alert(`参数已输出到控制台 (F12)\n\n摄像头起点: (${animParams.startX}, ${animParams.startY}, ${animParams.startZ})\n摄像头终点: (${animParams.endX}, ${animParams.endY}, ${animParams.endZ})\n目标点起点: (${animParams.targetStartX}, ${animParams.targetStartY}, ${animParams.targetStartZ})\n目标点终点: (${animParams.targetEndX}, ${animParams.targetEndY}, ${animParams.targetEndZ})\n时长: ${animParams.duration}秒\n缓动: ${animParams.easing}`);
+            alert(`参数已输出到控制台 (F12)。建议直接使用面板上方的“导出JSON”功能。`);
         }
 
         // 页面加载后初始化面板
